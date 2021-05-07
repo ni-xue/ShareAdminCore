@@ -38,8 +38,18 @@ namespace AdminCore
 
             services.AddResponseCompression();
 
-            services.AddAshx(o => o.IsAsync = true);//注册api。
-                                                    //.AddHttpContext();//注册静态方式的HttpContext对象获取。
+            services.AddAshx(o =>
+            {
+                o.IsAsync = true;
+                o.JsonOptions = new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)
+                {
+                    //IgnoreReadOnlyFields = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+                };
+
+                //o.JsonOptions.Converters.Add(JsonConverterHelper.GetDateConverter());
+            });//注册api。
+               //.AddHttpContext();//注册静态方式的HttpContext对象获取。
             services.AddObject(TcpFrame.CreateServer(AppSettings.Get("ServerIp"), 888));
         }
 
@@ -55,21 +65,11 @@ namespace AdminCore
                 app.UseExceptionHandler(AllException);
             }
 
-            app.Use(async (context, next) =>
-            {
-                if (context.Request.Path.Value.StartsWith("/Views/", StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Response.StatusCode = 404;
-                    await Task.CompletedTask;
-                }
-                else
-                {
-                    await next?.Invoke();
-                }
-            });
+            app.UseIgnoreUrl("Views");
 
             app.UseResponseCompression();
 
+            // 此部分为作者需要，你们可以直接删掉
             var staticfile = new StaticFileOptions();
             var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
             provider.Mappings.Add(".php", "text/plain");//手动设置对应MIME 
