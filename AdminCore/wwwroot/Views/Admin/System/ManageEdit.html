@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+    <style>
+        body {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="layui-form layuimini-form" lay-filter="example">
+        <div class="layui-form-item">
+            <label class="layui-form-label required">管理角色</label>
+            <div class="layui-input-block">
+                <select name="ddlRoleId" id="ddlRoleId" lay-filter="Role"></select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">用户名</label>
+            <div class="layui-input-block">
+                <input type="text" name="username" id="txtUserName" lay-verify="required" lay-reqtext="用户名不能为空" placeholder="请输入用户名" value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label required">登录密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="txtPassword" lay-verify="required" id="txtPassword" placeholder="请输入登录密码" value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label  required">确认密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="txtPassword1" lay-verify="required" id="txtPassword1" placeholder="请输入确认密码" value="" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveBtn">确认保存</button>
+            </div>
+        </div>
+    </div>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'nixue'], function () {
+            if (!layui.AddRoute()) return;
+            var form = layui.form,
+                layer = layui.layer,
+                $ = layui.$,
+                nx = layui.nixue;
+
+            let BaseUser =
+            {
+                ID: 0,
+                BaseName: "",
+                BasePwd: "",
+                BaseRank: "",
+                BaseRankId: 0,
+                UserId: 0,
+            }
+
+            BaseUser.ID = nx.GetQueryInt("id", 0);
+            GetUser();
+            function Update() {
+
+                nx.Psot(function (result) {
+                    nx.alert(result.msg, "close");
+                    //parent.layer.close(parent.layer.getFrameIndex(window.name))
+                }, '../../Api/AdminServers/UpdateBaseUsers', BaseUser);
+            }
+
+            function Insert() {
+                nx.Psot(function (result) {
+                    nx.alert(result.msg, "close");
+                    //parent.layer.close(parent.layer.getFrameIndex(window.name))
+                }, '../../Api/AdminServers/InsertBaseUsers', BaseUser);
+            }
+
+            //赋值
+            function GetBaseUsers(data) {
+                var ddlRoleId = $('#ddlRoleId option:selected');
+                BaseUser.BaseRankId = parseInt(ddlRoleId.attr("data-id"));//角色ID
+                BaseUser.BaseRank = data.ddlRoleId;//角色说明
+                BaseUser.BaseName = data.username;//用户名
+                BaseUser.BasePwd = data.txtPassword;//用户密码
+                BaseUser.UserId = 0;//
+            }
+
+            //监听提交
+            form.on('submit(saveBtn)', function (data) {
+                if (data.field.txtPassword != data.field.txtPassword1) {
+                    nx.msg("两次密码不一致！"); return;
+                }
+                GetBaseUsers(data.field);
+                if (BaseUser.ID == 0) {
+                    Insert();
+                } else {
+                    Update();
+                }
+                // 关闭弹出层
+                //layer.close(index);
+                //var iframeIndex = parent.layer.getFrameIndex(window.name);
+                //parent.layer.close(parent.layer.getFrameIndex(window.name));
+            });
+
+            //初始化管理员信息
+            function GetUser() {
+                nx.Psot(function (result) {
+                    //tablereload();
+                    //layer.msg(result.msg);
+                    let html = '';
+                    for (RoleDirectoryList of result.data.RoleDirectoryList) {
+                        html += `<option data-id="${RoleDirectoryList.Id}" value="${RoleDirectoryList.Descriptions}">${RoleDirectoryList.RoleName}</option>`;
+                    }
+                    $("#ddlRoleId").html(html);
+                    layui.use('form', function () {
+                        var form = layui.form;
+                        form.render();
+                    });
+                    //$(".layui-input-block select").ruleSingleSelect();
+                    if (result.code == 0) {
+                        if (BaseUser.ID != 0) {
+                            form.val('example', {
+                                "ddlRoleId": result.data.list.Descriptions
+                                , "username": result.data.list.BaseName
+                                , "txtPassword": 'null'
+                                , "txtPassword1": 'null'
+                            });
+                            let scals = $('#ddlRoleId')[0];
+                            for (var i = 0; i < scals.length; i++) {
+                                if ($(scals[i]).attr("data-id") == result.data.list.BaseRankId) {
+                                    scals[i].selected = true;
+                                    //let ulscals = $('.layui-input-block select');
+                                    //$(ulscals[0]).toggleClass("selected");
+                                    //for (var j = 0; j < ulscals.length; j++) {
+                                    //    if ($(ulscals[j]).text() == scals[i].text) {
+                                    //        $(ulscals[j]).toggleClass("selected");
+                                    //        $(".select-tit span").text(scals[i].text);
+                                    //        break;
+                                    //    }
+                                    //}
+                                    break;
+                                }
+                            }
+                            layui.form.render("select");
+                        }
+                    }
+                    else {
+                        nx.msg(result.msg);
+                    }
+                }, '../../Api/AdminServers/GetBaseUsers', { ID: BaseUser.ID });
+            }
+
+        });
+    </script>
+</body>
+</html>

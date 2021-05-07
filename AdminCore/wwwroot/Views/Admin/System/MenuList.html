@@ -1,0 +1,238 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+    <div class="layuimini-container" id="vue_app">
+        <div class="layuimini-main">
+
+            <fieldset class="table-search-fieldset">
+                <form class="layui-form layui-form-pane" action="">
+                    <div class="layui-form-item">
+                        <button type="submit" lay-submit="" class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-filter="add"> 新增 </button>
+                        <button type="submit" lay-submit="" class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-filter="delete"> 删除 </button>
+                        <button type="submit" lay-submit="" class="layui-btn layui-btn-sm layui-btn-danger" lay-filter="IsMenu"> 刷新菜单 </button>
+                    </div>
+                </form>
+            </fieldset>
+
+            <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                <thead>
+                    <tr>
+                        <th width="6%">选择</th>
+                        <!--<th width="8%">图标</th>-->
+                        <!--<th align="left" width="12%">控制器名</th>
+                        <th align="left" width="12%">调用名称</th>-->
+                        <th align="left">标题</th>
+                        <th width="6%" align="center">显示</th>
+                        <th width="8%" align="center">菜单等级</th>
+                        <th align="center" width="45">排序</th>
+                        <th align="center" width="12%">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="MenuLefts"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'nixue'], function () {
+            if (!layui.AddRoute()) return;
+            var $ = layui.jquery,
+                form = layui.form,
+                nx = layui.nixue,
+                banx = layui.BaseNx;
+
+            btnSearch();
+
+            function btnSearch() {
+                nx.Psot(function (result) {
+                    if (result.code == 0) {
+                        console.log(result);
+                        var html = '';
+                        if (result.data.list.length == 0) {
+                            html += '<tr><td align="center" colspan="8">暂无记录</td></tr>';
+                        } else {
+                            for (var i = 0; i < result.data.list.length; i++) {
+                                html += MenuHtml(result.data.list[i].Id, "-", "-", "-", result.data.list[i].Title, result.data.list[i].HideStatus, result.data.list[i].Sort_Id, 1, 0, 0);
+                                if (result.data.list[i].MenuLefts != null) {
+                                    for (var j = 0; j < result.data.list[i].MenuLefts.length; j++) {
+                                        if (result.data.list[i].MenuLefts[j].State == 0) {
+                                            html += MenuHtml(result.data.list[i].MenuLefts[j].Id, "-", "-", "-", result.data.list[i].MenuLefts[j].Title, result.data.list[i].MenuLefts[j].HideStatus, result.data.list[i].MenuLefts[j].Sort_Id, result.data.list[i].MenuLefts[j].Grades, result.data.list[i].MenuLefts[j].State, result.data.list[i].Id);
+                                            if (result.data.list[i].MenuLefts[j].MenuDetails != null) {
+                                                for (var l = 0; l < result.data.list[i].MenuLefts[j].MenuDetails.length; l++) {
+                                                    html += MenuHtml(result.data.list[i].MenuLefts[j].MenuDetails[l].Id, result.data.list[i].MenuLefts[j].MenuDetails[l].Controller, result.data.list[i].MenuLefts[j].MenuDetails[l].Action, result.data.list[i].MenuLefts[j].MenuDetails[l].Keywords, result.data.list[i].MenuLefts[j].MenuDetails[l].Title, result.data.list[i].MenuLefts[j].MenuDetails[l].HideStatus, result.data.list[i].MenuLefts[j].MenuDetails[l].Sort_Id, result.data.list[i].MenuLefts[j].MenuDetails[l].Grades, result.data.list[i].MenuLefts[j].MenuDetails[l].State, result.data.list[i].MenuLefts[j].Id);
+                                                }
+                                            }
+                                        } else {
+                                            html += MenuHtml(result.data.list[i].MenuLefts[j].Id, result.data.list[i].MenuLefts[j].Controller, result.data.list[i].MenuLefts[j].Action, result.data.list[i].MenuLefts[j].Keywords, result.data.list[i].MenuLefts[j].Title, result.data.list[i].MenuLefts[j].HideStatus, result.data.list[i].MenuLefts[j].Sort_Id, result.data.list[i].MenuLefts[j].Grades, result.data.list[i].MenuLefts[j].State, result.data.list[i].Id);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        $("#MenuLefts").html(html);
+                    } else {
+                        nx.alert(result.msg, "reload");
+                    }
+                }, '/Api/AdminServers/GetPermissionDirectoryLists');
+            };
+
+            function MenuHtml(Id, Controller, Action, Keywords, Title, HideStatus, Sort_Id, Grades, State, ParentID) {
+                var html = `<tr ${Grades == 1 ? `` : Grades == 2 ? State == 1 ? `style="background: #00ffff47;"` : `style="background: #d6ffd9;"` : `style="background: #00ffff47;"`}>
+                                        <td align="center">
+                                            <input type="checkbox" id="chkId${Id}" class="checkall" value="${Id}" data-Id="${Id}" data-Sort_Id="${Sort_Id}" data-ParentID="${ParentID}"  data-Grades="${Grades}" style="vertical-align: middle;" onclick="layui.swapCheck(chkId${Id})"/>
+                                        </td>
+                                        <!--<td>${Controller}</td>
+                                        <td>${Action}</td>-->
+                                        <td>
+                                            <label id="LitFirst">${Grades == 1 ? `<span class="folder-open"></span>` : `<span style="display:inline-block;width:${(Grades - 1) * 24}px;"></span><span class="folder-open"></span><span class="folder-line"></span>`}</label>
+                                            ${Grades == 1 ? `<i class="layui-icon layui-icon-layer"></i>` : Grades == 2 ? State == 1 ? `<i class="layui-icon layui-icon-file"></i>` : `<i class="layui-icon layui-icon-layer"></i>` : `<i class="layui-icon layui-icon-file"></i>`}
+                                            <a href="javascript:void(0)">${Title}</a>
+                                            ${State == 1 ? `(链接：${Controller}/${Action}${Keywords})` : ""}
+                                        </td>
+                                        <td align="center">${HideStatus == 0 ? "√" : "×"}</td>
+                                        <td align="center">${Grades}级</td>
+                                        <td align="center">${Sort_Id}</td>
+                                        <td align="center" style="white-space:nowrap;word-break:break-all;overflow:hidden;">
+                                            ${State == 0 ? `<a href="javascript:void(0)" onclick="layui.btnOpen('add',${Id})" class="layui-btn layui-btn-sm">添加子级</a>` : ""}
+                                            <a href="javascript:void(0)" onclick="layui.btnOpen('Edit',${Id})" class="layui-btn layui-btn-sm layui-btn-danger">修改</a>
+                                        </td>
+                                        </tr>`;
+                return html;
+            }
+
+            form.on('submit(IsMenu)', function (obj) {
+                nx.confirm("<div style='text-align: center;'><span>您确认要刷新系统菜单吗？</br>（即将退出登录哦！）</span></div>", function () {
+                    nx.Psot(function (data) {
+                        nx.msg(data.msg, "rerun");
+                    }, "../../Api/AdminServers/Logout", { IsMenu: true });
+                });
+                return false;
+            });
+
+            // 监听搜索操作
+            form.on('submit(delete)', function (data) {
+                var idlist = getidlist();
+                if (idlist) {
+                    nx.confirm("<div style='text-align: center;'><span>您确认要删除选中菜单吗？</br>（删除后不会马上生效！）</span></div>", function () {
+                        nx.Psot(function (result) {
+                            if (result.code == 0) {
+                                btnSearch();
+                                nx.msg(result.msg);
+                            } else {
+                                nx.msg(result.msg);
+                            }
+                        }, '../../Api/AdminServers/DeletePermissionDirectorys', { idlist: idlist });
+                    });
+                } else {
+                    nx.msg('请选中需要操作的数据！', null, 2);
+                }
+                return false;
+            });
+
+            // 监听搜索操作
+            form.on('submit(add)', function (data) {
+
+                layui.btnOpen("add", -1);
+
+                return false;
+            });
+
+            this.swapCheck = function (obj) {
+                var grades = parseInt(obj.dataset.grades);
+                var id = parseInt(obj.dataset.id);
+                var parentid = parseInt(obj.dataset.parentid);
+                var sort_id = parseInt(obj.dataset.sort_id);
+
+                if ($(obj).prop("checked")) {
+                    if (grades < 3) {
+                        MenuLeftschkId(id, true, true);
+                    }
+                } else {
+                    if (parentid > 0) {
+                        MenuLeftschkId(parentid, false, false);
+                    } else {
+                        MenuLeftschkId(id, false, true);
+                    }
+                }
+
+                function MenuLeftschkId(id, type, type1) {
+                    $("#MenuLefts tr").each(function () {
+                        var td1 = $(this).find("td").eq(0).find("input")[0];
+                        var grades1 = parseInt(td1.dataset.grades);
+                        var id1 = parseInt(td1.dataset.id);
+                        var parentid1 = parseInt(td1.dataset.parentid);
+                        var sort_id1 = parseInt(td1.dataset.sort_id);
+
+                        if (type1) {
+                            if (id == parentid1) {
+                                if (grades1 < 3) {
+                                    MenuLeftschkId(id1, type, type1);
+                                }
+                                $(td1).prop("checked", type);
+                            }
+                        } else {
+                            if (id == id1) {
+                                if (grades1 > 0) {
+                                    if (parentid1 > 0) {
+                                        MenuLeftschkId(parentid1, type, type1);
+                                    } else {
+                                        MenuLeftschkId(id1, type, true);
+                                    }
+                                }
+                                $(td1).prop("checked", type);
+                            }
+                        }
+                    })
+                }
+            }
+
+            this.btnOpen = function (action, Id) {
+                var url = `Admin/MenuEdil?action=${action}&id=${Id}`
+                var index = layer.open({
+                    title: action == "add" ? (Id == -1 ? "新增导航" : "新增子导航") : "修改导航",
+                    type: 2,
+                    shade: 0.2,
+                    maxmin: true,
+                    shadeClose: true,
+                    area: ['40%', '75.5%'],
+                    content: '../../' + url,
+                    end: function () {
+                        // 右上角关闭事件的逻辑
+                        btnSearch();
+                    }
+                });
+                $(window).on("resize", function () {
+                    layer.full(index);
+                });
+            }
+
+            //获取复选框选中的Id
+            function getidlist() {
+                var idlist = '';
+                $(".checkall").each(function (index) {
+                    if ($(this).prop("checked") === true) {
+                        idlist = idlist + $(this).val() + ",";
+                    }
+                });
+                if (idlist.length > 1) {
+                    idlist = idlist.substring(0, idlist.length - 1);
+                }
+                return idlist;
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>

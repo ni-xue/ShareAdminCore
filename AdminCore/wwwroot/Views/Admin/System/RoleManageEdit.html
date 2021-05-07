@@ -1,0 +1,343 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+    <div class="layuimini-container" id="vue_app">
+        <div class="layuimini-main">
+
+            <fieldset class="table-search-fieldset">
+                <legend>编辑角色信息</legend>
+                <div style="margin: 10px 10px 10px 10px">
+                    <form class="layui-form layui-form-pane" action="" lay-filter="example">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">角色名称</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="txtRoleName" lay-verify="required" autocomplete="off" placeholder="*角色中文名称，20字符内" maxlength="20" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">角色描述</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="txtRoleDescriptions" lay-verify="required" autocomplete="off" placeholder="*角色使用范围说明，100字符内" maxlength="100" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">数据中心</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" checked="" name="HomeState" lay-skin="switch" lay-filter="switchTest" lay-text="ON|OFF">
+                            </div>
+                        </div>
+
+                        <!--<div class="layui-form-item">
+                            <label class="layui-form-label">测试</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="Descriptions" lay-verify="required" autocomplete="off" placeholder="*角色使用范围说明，100字符内" maxlength="100" class="layui-input">
+                            </div>
+                        </div>-->
+
+                        <div class="layui-form-item" pane="">
+                            <table cellspacing="0" cellpadding="0" border="0" class="layui-table">
+                                <thead>
+                                    <tr>
+                                        <th width="30%">导航名称</th>
+                                        <th>权限分配</th>
+                                        <th width="10%">全选</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="MenuLefts"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-input-block">
+                                <button type="submit" class="layui-btn" lay-submit="" lay-filter="btnSubmit">立即提交</button>
+                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+
+            <!--<script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+            </script>-->
+
+        </div>
+    </div>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
+    <script>
+        layui.use(['nixue'], function () {
+            if (!layui.AddRoute()) return;
+            var $ = layui.jquery,
+                table = layui.table,
+                nx = layui.nixue,
+                banx = layui.BaseNx,
+                form = nx.form;
+
+            let RoleDirectory =
+            {
+                Id: 0,
+                RoleName: "",
+                Descriptions: "",
+                HomeState: false,
+                json: null
+            }
+
+            //nx.AddVue({
+            //    el: "#vue_app",
+            //    data: {
+            //        items: [],
+            //        form: RoleDirectory
+            //    },
+            //    mounted: function () {
+            //        //发送post请求
+            //        this.$nextTick(function () {
+            //            this.post(1);
+            //        });
+            //    },
+            //    methods: {
+            //        post: function (_pageIndex) {
+            //            GetUser();
+            //            this.form.Descriptions = 50;
+            //        }
+            //    }
+            //});
+
+            RoleDirectory.Id = nx.GetQueryInt("id", -1);
+
+            GetUser();
+
+            function GetUser() {
+                nx.Psot(function (result) {
+                    console.log(result);
+                    if (result.code == 0) {
+                        if (RoleDirectory.Id > 0) {
+                            RoleDirectory.Id = result.data.Roles.Id;
+                            //$("#txtRoleName").val(result.data.Roles.RoleName);
+                            //$("#txtRoleDescriptions").val(result.data.Roles.Descriptions);
+                            //if (result.data.Roles.HomeState) {
+                            //    $("#cbIsLock").prop("checked", "checked");
+                            //    var checkbox = $('.rule-single-checkbox.single-checkbox a');
+                            //    if (checkbox.attr("class") != "selected") {
+                            //        checkbox.toggleClass("selected");
+                            //    }
+                            //}
+
+                            form.val('example', {
+                                "txtRoleName": result.data.Roles.RoleName
+                                , "txtRoleDescriptions": result.data.Roles.Descriptions
+                                , "HomeState": result.data.Roles.HomeState //开关状态
+                            });
+                        }
+
+                        var html = '';
+                        if (result.data.list.length == 0) {
+                            html += '<tr><td align="center" colspan="8">暂无记录</td></tr>';
+                        } else {
+
+                            for (list of result.data.list) {
+                                html += MenuHtml(list.Id, list.ActionId, list.Title, list.HideStatus, list.Sort_Id, 1, 0, list.Authority, list.PermissionType);
+                                if (list.MenuLefts != null) {
+                                    for (MenuLefts of list.MenuLefts) {
+                                        html += MenuHtml(MenuLefts.Id, MenuLefts.ActionId, MenuLefts.Title, MenuLefts.HideStatus, MenuLefts.Sort_Id, MenuLefts.Grades, MenuLefts.State, MenuLefts.Authority, MenuLefts.PermissionType);
+                                        if (MenuLefts.State == 0) {
+                                            if (MenuLefts.MenuDetails != null) {
+                                                for (MenuDetails of MenuLefts.MenuDetails) {
+                                                    html += MenuHtml(MenuDetails.Id, MenuDetails.ActionId, MenuDetails.Title, MenuDetails.HideStatus, MenuDetails.Sort_Id, MenuDetails.Grades, MenuDetails.State, MenuDetails.Authority, MenuDetails.PermissionType);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        $("#MenuLefts").html(html);
+
+                        layui.form.render("checkbox");
+
+                    } else {
+                        nx.alert(result.msg, "reload");
+                    }
+                }, '/Api/AdminServers/GetRoleDirectoryID', { ID: RoleDirectory.Id });
+            };
+
+            function MenuHtml(Id, ActionId, Title, HideStatus, Sort_Id, Grades, State, Authority, PermissionType) {
+                let html = '';
+                if (HideStatus == 0) {
+                    html = `<tr ${Grades == 1 ? `` : Grades == 2 ? State == 1 ? `style="background: #00ffff47;"` : `style="background: #d6ffd9;"` : `style="background: #00ffff47;"`}>
+                                        <td>
+                                            <input type="hidden" value="${Id}" data-id="${ActionId}" data-LayerId="${Sort_Id}" data-Authority="${PermissionType}" /><!-- name="hidId" -->
+                                            <label id="LitFirst">${Grades == 1 ? `<span class="folder-open"></span>` : `<span style="display:inline-block;width:${(Grades - 1) * 24}px;"></span><span class="folder-open"></span><span class="folder-line"></span>`}</label>
+                                            ${Grades == 1 ? `<i class="layui-icon layui-icon-layer"></i>` : Grades == 2 ? State == 1 ? `<i class="layui-icon layui-icon-file"></i>` : `<i class="layui-icon layui-icon-layer"></i>` : `<i class="layui-icon layui-icon-file"></i>`}
+                                            <a href="javascript:void(0)">${Title}</a>
+                                        </td>
+                                        <td><div id="ActionType_${Id}_${Grades}">${ActionTypeList(Id, Grades, Authority, PermissionType)}</div></td>
+                                        <td align="center"><input name="checkAll" type="checkbox" title="全选" lay-skin="checkbox" lay-filter="checkAll" /></td>
+                                        </tr>`;
+                }
+                return html;
+            }
+
+            function ActionTypeList(Id, Grades, Authority, PermissionType) {
+                let html = '';
+                let arr = Authority.split(',');
+                let _arr = PermissionType.split(',');
+                for (var i = 0; i < arr.length; i++) {
+                    html += `<input type="checkbox" ${$.inArray(arr[i], _arr) == -1 ? '' : `checked = "checked"`} id="ActionType_${Id}_${Grades}_${arr[i]}" value = "${arr[i]}" title="${ActionTypeName(arr[i])}">`; //name="like[${Id}_${Grades}_${arr[i]}]"`<input id="ActionType_${Id}_${Grades}_${arr[i]}" type="checkbox" name="ActionType-${Id}-${Grades}-${arr[i]}" ${$.inArray(arr[i], _arr) == -1 ? '' : `checked = "checked"`} value = "${arr[i]}" > <label for="ActionType_${Id}_${Grades}_${arr[i]}"> ${ActionTypeName(arr[i])} </label>`;
+                }
+                return html;
+            }
+
+            function ActionTypeName(TypeName) {
+                if (TypeName == 'All') {
+                    return '所有';
+                } else if (TypeName == 'Show') {
+                    return '显示';
+                } else if (TypeName == 'View') {
+                    return '查看';
+                } else if (TypeName == 'Add') {
+                    return '添加';
+                } else if (TypeName == 'Edit') {
+                    return '修改';
+                } else if (TypeName == 'Delete') {
+                    return '删除';
+                }
+            }
+
+            let Roles = [];
+            function btnSubmit(field) {
+                //if ($("#txtRoleName").val().length == 0) {
+                //    parent.jsprint("角色名称不能为空！", "");
+                //    return;
+                //}
+                //if ($("#txtRoleDescriptions").val().length == 0) {
+                //    parent.jsprint("角色描述不能为空！", "");
+                //    return;
+                //}
+                $("#MenuLefts tr").each(function () {
+                    var td1 = $(this).find("td").eq(0)
+                    var auto = td1.find("input")[0].dataset.authority;
+                    var input1 = td1.find("input")[0].defaultValue;
+                    var data = td1.find("input")[0].dataset.id;
+                    var td2 = $(this).find("td").eq(1).find("div input");
+                    var type = []
+                    var aType = ""
+                    $(td2).each(function (i) {
+                        if ($(td2[i]).prop("checked")) {
+                            var attribute = td2[i].defaultValue;
+                            type.push(attribute)
+                        }
+                    });
+
+                    if (data == 0) {
+                        if (type.length > 0) {
+                            aType = "Add";
+                        } else {
+                            return;
+                        }
+                    } else if (data > 0 && type.length == 0) {
+                        aType = "Delete";
+                    } else {
+                        if (IsArray(auto, type)) {
+                            aType = "Edit";
+                        } else {
+                            return;
+                        }
+                    }
+
+
+                    let Role =
+                    {
+                        Id: parseInt(data),
+                        PermissionId: parseInt(input1),
+                        PermissionType: type.join(),
+                        ActionType: aType,//Add,Edit,Delete
+                    }
+                    Roles.push(Role);
+                })
+                console.log(Roles);
+
+                RoleDirectory.RoleName = field.txtRoleName; //$("#txtRoleName").val();
+                RoleDirectory.Descriptions = field.txtRoleDescriptions; //$("#txtRoleDescriptions").val();
+                RoleDirectory.HomeState = field.HomeState == 'on' ? true : false; // $("#cbIsLock").prop("checked");
+                RoleDirectory.json = JSON.stringify(Roles);
+                if (RoleDirectory.Id == -1) {
+                    Insert();
+                } else {
+                    Update();
+                }
+
+                Roles = []
+            }
+
+            function Update() {
+                nx.Psot(function (result) {
+                    if (result.code == 0) {
+                        console.log(result);
+                        nx.alert(result.msg, 'close');
+                    }
+                    else {
+                        nx.alert(result.msg);
+                    }
+                }, '/Api/AdminServers/UpdateRoleDirectorys', RoleDirectory);
+            }
+
+            function Insert() {
+                nx.Psot(function (result) {
+                    if (result.code == 0) {
+                        console.log(result);
+                        nx.alert(result.msg, function () {
+                            nx.ThisClose(banx);
+                        });
+                    }
+                    else {
+                        nx.alert(result.msg);
+                    }
+                }, '/Api/AdminServers/InsertRoleDirectorys', RoleDirectory);
+            }
+
+            function IsArray(auto, type) {
+                var con = 0;
+                for (_auto of auto.split(',')) {
+                    if ($.inArray(_auto, type) != -1) {
+                        con++;
+                    }
+                }
+                if (con == type.length) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            form.on('checkbox(checkAll)', function (data) {
+                if ($(this).prop("checked") == true) {
+                    $(this).parent().siblings("td").find("input[type='checkbox']").prop("checked", true);
+                } else {
+                    $(this).parent().siblings("td").find("input[type='checkbox']").prop("checked", false);
+                }
+                layui.form.render("checkbox");
+            });
+
+            // 监听搜索操作
+            form.on('submit(btnSubmit)', function (data) {
+
+                btnSubmit(data.field);
+
+                return false;
+            });
+
+        });
+    </script>
+
+</body>
+</html>

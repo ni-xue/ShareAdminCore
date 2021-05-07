@@ -1,0 +1,49 @@
+﻿body {
+    font: 12px Helvetica Neue,Helvetica,PingFang SC,Tahoma,Arial,sans-serif;
+}
+
+.layui-table-cell {
+    height: 25px;
+    line-height: 25px;
+}
+
+.layui-table td, .layui-table th {
+    font-size: 12px;
+}
+
+.layui-form-pane .layui-form-label {
+    padding: 8px 15px;
+    height: 30px;
+    line-height: 15px;
+}
+
+.layui-input, .layui-select, .layui-textarea {
+    height: 30px;
+}
+
+.layui-form-mid {
+    line-height: 12px;
+}
+
+.layui-btn {
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    padding: 0px 10px;
+}
+
+.layui-form-item .layui-input-inline {
+    width: 150px;
+}
+
+.layui-tab-title .layui-this {
+    border-bottom: 1px solid #2af57f;
+}
+
+.layui-unselect.layui-form-switch {
+    margin-top: 2.9px;
+}
+
+.layui-input-block {
+    min-height: 15px;
+}

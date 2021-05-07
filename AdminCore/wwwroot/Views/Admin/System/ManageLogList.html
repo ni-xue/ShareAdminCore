@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+    <div class="layuimini-container">
+        <div class="layuimini-main">
+
+            <fieldset class="table-search-fieldset">
+                <legend>搜索信息</legend>
+                <div style="margin: 10px 10px 10px 10px">
+                    <form class="layui-form layui-form-pane" action="" lay-filter="example">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">操作类型</label>
+                                <div class="layui-input-inline">
+                                    <select name="ModuleType" lay-verify="required" lay-search="">
+                                        <option value="all">全部</option>
+                                        <option value="Login">登录</option>
+                                        <option value="Add">增加</option>
+                                        <option value="Edit">修改</option>
+                                        <option value="Delete">删除</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">时间范围</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="StartTime" id="date" lay-verify="date" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input">
+                                </div>
+                                <div class="layui-form-mid">~</div>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="EndTime" id="date1" lay-verify="date" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <label class="layui-form-label">用户名</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="BaseName" placeholder="请输入" autocomplete="off" class="layui-input">
+                                </div>
+                                <div class="layui-input-inline" style="padding-left: 14px;">
+                                    <button type="submit" class="layui-btn layui-btn-primary" lay-submit lay-filter="data-search-btn"><i class="layui-icon"></i> 搜 索</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+
+            <script type="text/html" id="toolbarDemo">
+                <div class="layui-btn-container">
+                    <button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"> 删除日志 </button>
+                    <!--    <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add">  </button>-->
+                </div>
+            </script>
+
+            <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
+
+            <!--<script type="text/html" id="currentTableBar">
+                <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">编辑</a>
+                <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+            </script>-->
+
+        </div>
+    </div>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'table', 'laydate', 'nixue'], function () {
+            if (!layui.AddRoute()) return;
+            var $ = layui.jquery,
+                form = layui.form,
+                table = layui.table,
+                laydate = layui.laydate,
+                nx = layui.nixue,
+                banx = layui.BaseNx;
+            //日期
+            laydate.render({
+                elem: '#date'
+                , value: nx.GetDateString("yyyy-MM-dd")
+                , isInitValue: true
+            });
+            laydate.render({
+                elem: '#date1'
+                , value: nx.GetDateString("yyyy-MM-dd")
+                , isInitValue: true
+            });
+
+            tablerender();
+
+            function tablerender() {
+                var data = form.val('example')
+                table.render({
+                    elem: '#currentTableId',
+                    url: '../../Api/AdminServers/GetBaseLogs',
+                    method: 'post',
+                    where: data,//{ BaseName: '', ModuleType: 'all', KindID: 0, ServerID: 0, StartTime: data, EndTime: 0},
+                    toolbar: '#toolbarDemo',
+                    defaultToolbar: ['filter', 'exports', 'print'],
+                    cols: [[
+                        { field: 'BaseName', align: "center", title: '用户名', fixed: 'left' },
+                        { field: 'ModuleType', align: "center", title: '操作类型', sort: true },
+                        { field: 'ModuleText', align: "center", title: '备注', sort: true },
+                        { field: 'BaseIp', align: "center", title: '用户IP', sort: true },
+                        { field: 'BaseTime', align: "center", title: '添加时间', sort: true, templet: function (res) { return '<em>' + nx.GetDateString('yyyy-MM-dd hh:mm:ss', res.BaseTime) + '</em>' } }
+                    ]],
+                    limits: [10, 15, 20, 25, 50, 100],
+                    limit: 100,
+                    page: true,
+                    done: function (res, curr, count) {
+                        nx.TableDone({
+                            table: this.elem,
+                            data: res.data,
+                            //key: "BaseIp",
+                            on: function () {
+                                var that = this;
+                                nx.GetIpAddress(that.data.BaseIp).then(function (a) { //console.log(a);
+                                    that.tds.BaseIp.text(a);//that.td.text(a);
+                                });
+                            }
+                        });
+
+                        nx.TableSort(this, table);
+                    },
+                    skin: 'line',
+                    height: 'full-170',
+                    cellMinWidth: 80,
+                    parseData: nx.TableParseData,
+                    autoSort: false
+                });
+            }
+
+            // 监听搜索操作
+            form.on('submit(data-search-btn)', function (data) {
+                //执行搜索重载
+                table.reload('currentTableId', {
+                    page: { curr: 1 },
+                    where: data.field
+                }, 'data');
+                return false;
+            });
+
+            table.on('toolbar(currentTableFilter)', function (obj) {
+                var data = obj.data;
+                if (obj.event === 'delete') {
+                    layer.confirm('删除后不可恢复，确定删除吗？', function (index) {
+                        nx.Psot(function (result) {
+                            //var code = result.code;
+                            layer.msg(result.msg, { offset: '6px' });
+                        }, '../../Api/AdminServers/DeleteBaseLogs');
+                    });
+                }
+            });
+        });
+
+
+
+    </script>
+
+</body>
+</html>

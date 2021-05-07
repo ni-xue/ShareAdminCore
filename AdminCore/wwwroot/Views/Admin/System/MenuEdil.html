@@ -1,0 +1,436 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>layui</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../css/public.css" media="all">
+</head>
+<body>
+    <div class="layuimini-container">
+        <div class="layuimini-main">
+
+            <fieldset class="table-search-fieldset">
+                <legend>编辑角色信息</legend>
+                <div style="margin: 10px 10px 10px 10px">
+                    <form class="layui-form layui-form-pane" action="" lay-filter="example">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">上级导航</label>
+                            <div class="layui-input-inline">
+                                <select name="ddlParentId" lay-filter="ChangeDrop" lay-verify="required" class="layui-input"></select>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">导航标题</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="txtTitle" lay-verify="title" autocomplete="off" placeholder="*导航中文标题，10字符内" maxlength="10" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">排序数字</label>
+                            <div class="layui-input-inline">
+                                <input type="number" name="txtSortId" lay-verify="required" autocomplete="off" placeholder="*数字，越小越向前" value="99" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">是否隐藏</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" name="HideStatus" lay-skin="switch" lay-filter="switchTest" lay-text="ON|OFF">
+                                <div class="layui-badge-rim layui-form-radio layui-word-aux">*隐藏后不显示在界面导航菜单中。</div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item" id="enumerable">
+                            <label class="layui-form-label">是否是菜单</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" name="IsState" lay-skin="switch" lay-filter="switchIsState" lay-text="ON|OFF">
+                                <div class="layui-badge-rim layui-form-radio layui-word-aux">*隐藏后不显示基本信息。</div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <label class="layui-form-label">访问页面</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="txtController" lay-verify="content" autocomplete="off" placeholder="*控制器名" maxlength="50" class="layui-input">
+                                </div>
+                                <div class="layui-form-mid">/</div>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="txtAction" lay-verify="content" autocomplete="off" placeholder="*页面名称" maxlength="50" class="layui-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">默认带参</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="txtKeywords" autocomplete="off" placeholder="非必填，当访问页面需要带参数时请加上（例如：?a=1&b=2）" maxlength="100" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">可用权限</label>
+                            <div class="layui-input-block" id="cblActionType"></div>
+                        </div>
+
+                        <div class="layui-form-text">
+                            <div class="layui-input-block">
+                                <button type="submit" class="layui-btn" lay-submit="" lay-filter="btnSubmit">立即提交</button>
+                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
+    <script>
+        layui.use(['form', 'nixue'], function () {
+            if (!layui.AddRoute()) return;
+            var $ = layui.jquery,
+                form = layui.form,
+                table = layui.table,
+                nx = layui.nixue,
+                banx = layui.BaseNx;
+
+            //自定义验证规则
+            form.verify({
+                title: function (value) {
+                    if (value.length < 2) {
+                        return '标题至少得2个字符啊';
+                    }
+                }
+                , content: [/^^[\D][a-zA-Z0-9\_]+[a-zA-Z0-9]{1,50}$/, '首字母必须是字母且至少有三个字符。</br>（只允许字母、数字、_）']
+            });
+
+            let action = "";
+            let Permission =
+            {
+                Id: 0,
+                ParentID: 0,
+                Controller: null,
+                Action: null,
+                Title: null,
+                ImgStyle: 'fa fa-window-maximize',//null,
+                Keywords: null,
+                Sort_Id: 0,
+                HideStatus: 0,
+                Grades: 0,
+                State: 0,
+                Authority: null
+            }
+
+            Permission.Id = nx.GetQueryInt("id", -1);
+            action = (nx.GetQueryString("action", "add")).toLowerCase();
+
+            if (action == 'edit' && Permission.Id < 1) {
+
+                return nx.alert("非正常访问！", 'close');
+            }
+
+            GetUser();
+
+            function GetUser() {
+                nx.Psot(function (result) {
+                    console.log(result);
+                    if (result.code == 0) {
+                        var State = 1;
+                        var RAuthority = 'Show';
+                        if (action == 'edit') {
+
+                            form.val('example', {
+                                "txtTitle": result.data.Roles.Title
+                                , "txtSortId": result.data.Roles.Sort_Id
+                                , "HideStatus": result.data.Roles.HideStatus //开关状态
+                            });
+
+                            //form.render("checkbox");
+
+                            Permission.Id = result.data.Roles.Id;
+                            Permission.HideStatus = result.data.Roles.HideStatus;
+                            Permission.ParentID = result.data.Roles.ParentID;
+                            Permission.Sort_Id = result.data.Roles.Sort_Id;
+                            Permission.State = result.data.Roles.State;
+                            Permission.Grades = result.data.Roles.Grades;
+
+                            State = result.data.Roles.State;
+                            RAuthority = result.data.Roles.Authority;
+
+                            if (Permission.Grades == 3) {
+                                $("#enumerable").hide();
+                            } else if (Permission.Grades == 1) {
+                                switchIsState();//$(".tab-content dl:gt(4)").hide();
+                                $("#enumerable").hide();
+                            }
+
+                            if (Permission.State == 1) {
+                                Permission.Controller = result.data.Roles.Controller;
+                                Permission.Action = result.data.Roles.Action;
+                                Permission.Keywords = result.data.Roles.Keywords;
+                                form.val('example', {
+                                    "txtController": Permission.Controller
+                                    , "txtAction": Permission.Action
+                                    , "txtKeywords": Permission.Keywords
+                                });
+                            } else {
+                                form.val('example', {
+                                    "IsState": true
+                                });
+                                switchIsState();//$(".tab-content dl:gt(4)").hide();
+                            }
+                        } else {
+                            if (Permission.Id != -1) {
+                                Permission.ParentID = result.data.Roles.Id;
+                                Permission.Grades = result.data.Roles.Grades;
+
+                                if (Permission.Grades == 3) {
+                                    return nx.alert("非法操作！", 'close');
+                                } else if (Permission.Grades == 2) {
+                                    $("#enumerable").hide();
+                                    Permission.Grades = 3
+                                }
+
+                                State = 1; RAuthority = 'View';
+                            } else {
+                                form.val('example', {
+                                    "IsState": true
+                                });
+                                State = 0; RAuthority = 'Show';
+                            }
+                        }
+
+                        let html = '';
+                        if (Permission.ParentID == 0) {
+                            html += `<option data-id="0"  data-Grades="0" value="0" selected="selected">『无上级』</option>`;//Show Authority
+                        }
+                        for (list of result.data.list) {
+                            html += `<option data-id="${list.Id}" data-Grades="1" ${list.Id == Permission.ParentID ? `selected="selected"` : ``} value="${list.Id}">${list.Title}</option>`;
+                            if (list.MenuLefts != null) {
+                                for (MenuLefts of list.MenuLefts) {
+                                    html += `<option data-id="${MenuLefts.Id}" data-Grades="${MenuLefts.Grades}" ${MenuLefts.Id == Permission.ParentID ? `selected="selected"` : ``} value="${MenuLefts.Id}">&nbsp; ├ ${MenuLefts.Title}</option>`;
+                                }
+                            }
+                        }
+                        var ddlParentId = $("select[name=ddlParentId]");
+                        ddlParentId.html(html);
+
+                        form.render("select");
+
+                        if (action != 'edit') { ChangeDrop(ddlParentId); switchIsState(); }
+
+                        btnActionType(State, RAuthority);
+                    } else {
+                        nx.alert(result.msg, "close");
+                    }
+                }, '/Api/AdminServers/GetPermDireID', { ID: Permission.Id });
+            }
+
+            let Roles = [];
+            function btnSubmit(field) {
+                let idlist = getidlist();
+                if (idlist == "") {
+                    return nx.alert("请选择有效权限", null, 2);
+                }
+
+                var IsState = field.IsState == 'on' ? true : false
+                if (!IsState) {
+                    Permission.Controller = field.txtController;
+                    Permission.Action = field.txtAction;
+                    Permission.Keywords = field.txtKeywords;
+                }
+
+                var Obj = $("select[name=ddlParentId]").children("option:selected")[0];
+                var ParentID = parseInt(Obj.dataset.id);
+                var Grades = parseInt(Obj.dataset.grades);
+
+                Permission.Authority = IsState ? "Show" : idlist;
+                Permission.State = IsState ? 0 : 1;
+                Permission.ParentID = ParentID;
+                Permission.Grades = Grades + 1;
+
+                Permission.Title = field.txtTitle;
+                Permission.Sort_Id = field.txtSortId;
+
+                Permission.HideStatus = field.HideStatus == 'on' ? 1 : 0;
+
+                if (action == 'edit') {
+                    Update();
+                } else {
+                    Insert();
+                }
+            }
+
+            function Update() {
+                nx.Psot(function (result) {
+                    if (result.code == 0) {
+                        console.log(result);
+                        nx.alert(result.msg, 'close');
+                    }
+                    else {
+                        nx.alert(result.msg);
+                    }
+                }, '/Api/AdminServers/UpdatePermissionDirectorys', Permission);
+            }
+
+            function Insert() {
+                nx.Psot(function (result) {
+                    if (result.code == 0) {
+                        console.log(result);
+                        nx.alert(result.msg, 'close');
+                    }
+                    else {
+                        nx.alert(result.msg);
+                    }
+                }, '/Api/AdminServers/InsertPermissionDirectorys', Permission);
+            }
+
+            // 监听搜索操作
+            form.on('submit(btnSubmit)', function (data) {
+
+                btnSubmit(data.field);
+                return false;
+            });
+
+            // 是否是菜单事件
+            form.on('switch(switchIsState)', function (data) {
+                var checked = this.checked ? this.checked : data[0].checked;
+                if (checked) {
+                    $("form.layui-form div.layui-form-item:gt(4)").hide();
+                    $("input[name=txtController]").attr('lay-verify', "");
+                    $("input[name=txtAction]").attr('lay-verify', "");
+                    btnActionType(0, 'Show');
+                } else {
+                    $("form.layui-form div.layui-form-item:gt(4)").show();
+                    $("input[name=txtController]").attr('lay-verify', "content");
+                    $("input[name=txtAction]").attr('lay-verify', "content");
+                    btnActionType(1, 'View');
+                }
+
+                return false;
+            });
+
+            // 选项卡事件
+            form.on('select(ChangeDrop)', function (data) {
+                ChangeDrop($(data.elem));
+                return false;
+            });
+
+            // 选项卡事件
+            form.on('checkbox(cblActionType)', function (data) {
+                var checked = this.checked ? this.checked : data[0].checked;
+                var cblActionType = $("#cblActionType input:gt(0)");
+                cblActionType.prop("checked", "");
+                if (checked) {
+                    cblActionType.attr('disabled', "true");
+                } else {
+                    cblActionType.removeAttr("disabled");
+                }
+                form.render("checkbox");
+                return false;
+            });
+
+
+            function ChangeDrop(ddlParentId) {
+                if (ddlParentId.length > 0) {
+                    var Selected = ddlParentId.children("option:selected").val();
+                    var Selename = ddlParentId.children("option:selected").text();
+                    var Grades = ddlParentId.children("option:selected")[0].dataset.grades;
+                    if (Grades == 0) {
+                        //$("form.layui-form div.layui-form-item:gt(3)").hide();
+
+                        //$("input[name=txtController]").attr('lay-verify', "");
+                        //$("input[name=txtAction]").attr('lay-verify', "");
+                        //btnActionType(0, 'Show');
+
+                        form.val('example', {
+                            "IsState": true
+                        });
+                        $("#enumerable").hide();
+                        switchIsState();
+                    } else if (Grades == 2) {
+
+                        form.val('example', {
+                            "IsState": false
+                        });
+                        $("#enumerable").hide();
+
+                        //$("form.layui-form div.layui-form-item:gt(3)").hide();
+                        //$("form.layui-form div.layui-form-item:gt(4)").show();
+
+                        //$("input[name=txtController]").attr('lay-verify', "content");
+                        //$("input[name=txtAction]").attr('lay-verify', "content");
+                        //btnActionType(1, 'View');
+
+                        switchIsState();
+                    } else {
+                        //$("form.layui-form div.layui-form-item:gt(0)").show();
+
+                        //$("input[name=txtController]").attr('lay-verify', "content");
+                        //$("input[name=txtAction]").attr('lay-verify', "content");
+                        $("#enumerable").show();
+
+                        //btnActionType(1, 'View');
+
+                        switchIsState();
+                    }
+                    console.log(Selected, Selename, Grades);
+                }
+            }
+
+            function switchIsState() {
+                layui.event('form', 'switch(switchIsState)', $('input[name=IsState]'));
+            }
+
+            function btnActionType(State, RAuthority) {
+                let _html = '';
+                let Authority = State == 0 ? "Show" : "All,View,Add,Edit,Delete";
+                let arr = Authority.split(',');
+                let _arr = RAuthority.split(',');
+                for (var i = 0; i < arr.length; i++) {
+                    _html += `<input id="cblActionType_${i}" ${arr[i] == 'All' ? `lay-filter="cblActionType"` : ''} type="checkbox" class="checkall" name="cblActionType$${i}" ${$.inArray(arr[i], _arr) == -1 ? '' : `checked = "checked"`} value="${arr[i]}" title="${ActionTypeName(arr[i])}(${arr[i]})"/>`;
+
+                    //`<input type="checkbox" ${$.inArray(arr[i], _arr) == -1 ? '' : `checked = "checked"`} id="ActionType_${Id}_${Grades}_${arr[i]}" name="like[${Id}_${Grades}_${arr[i]}]" value = "${arr[i]}" title="${ActionTypeName(arr[i])}">`;
+                }
+                $("#cblActionType").html(_html);
+                form.render("checkbox");
+
+                function ActionTypeName(TypeName) {
+                    if (TypeName == 'All') {
+                        return '所有';
+                    } else if (TypeName == 'Show') {
+                        return '显示';
+                    } else if (TypeName == 'View') {
+                        return '查看';
+                    } else if (TypeName == 'Add') {
+                        return '添加';
+                    } else if (TypeName == 'Edit') {
+                        return '修改';
+                    } else if (TypeName == 'Delete') {
+                        return '删除';
+                    }
+                }
+            }
+
+            //获取复选框选中的Id
+            function getidlist() {
+                var idlist = '';
+                $(".checkall").each(function (index) {
+                    if ($(this).prop("checked") === true) {
+                        idlist = idlist + $(this).val() + ",";
+                    }
+                });
+                if (idlist.length > 1) {
+                    idlist = idlist.substring(0, idlist.length - 1);
+                }
+                return idlist;
+            }
+        });
+    </script>
+
+</body>
+</html>
