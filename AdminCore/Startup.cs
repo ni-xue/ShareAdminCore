@@ -48,6 +48,7 @@ namespace AdminCore
                 };
 
                 //o.JsonOptions.Converters.Add(JsonConverterHelper.GetDateConverter());
+                o.JsonOptions.Converters.Add(JsonConverterHelper.GetDBNullConverter());
             });//注册api。
                //.AddHttpContext();//注册静态方式的HttpContext对象获取。
             services.AddObject(TcpFrame.CreateServer(AppSettings.Get("ServerIp"), 888));
@@ -98,10 +99,10 @@ namespace AdminCore
 
             TcpFrame.ConnectClient(loggerFactory);
         }
-        public void AllException(HttpContext context, Exception exception)
+        public async Task AllException(HttpContext context, Exception exception)
         {
-            context.Response.Write("An unknown error has occurred!");
-            Log.Error("捕获全局异常：", exception);
+            await context.Response.WriteAsync("An unknown error has occurred!");
+            Log.Error("捕获全局异常：", exception);//"Log/Risk/"
         }
     }
 }
