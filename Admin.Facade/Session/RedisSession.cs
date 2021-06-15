@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Tool.Web.Session;
 using Tool.Sockets.TcpFrame;
 
-namespace Admin.Facade
+namespace Admin.Facade.Session
 {
     public class RedisSession : DiySession
     {

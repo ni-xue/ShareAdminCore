@@ -22,7 +22,8 @@ namespace Admin.Facade.Helper
         /// <param name="FileName">原始图片路径</param>
         public bool SetImage(string FileName)
         {
-            srcFileName = TextUtility.GetMapPath(FileName);
+            srcFileName = FileName;
+            //srcFileName = Path.GetFullPath(FileName);// TextUtility.GetMapPath
             try
             {
                 srcImage = Image.FromFile(srcFileName);
@@ -110,8 +111,8 @@ namespace Admin.Facade.Helper
         private static void SaveImage(Image image, string savePath, ImageCodecInfo ici)
         {
             //设置 原图片 对象的 EncoderParameters 对象
-            EncoderParameters parameters = new EncoderParameters(1);
-            parameters.Param[0] = new EncoderParameter(Encoder.Quality, ((long)100));
+            EncoderParameters parameters = new(1);
+            parameters.Param[0] = new EncoderParameter(Encoder.Quality, (long)100);
             image.Save(savePath, ici, parameters);
             parameters.Dispose();
         }
@@ -188,21 +189,15 @@ namespace Admin.Facade.Helper
         /// <returns></returns>
         public static ImageFormat GetFormat(string name)
         {
-            string ext = name.Substring(name.LastIndexOf(".") + 1);
-            switch (ext.ToLower())
+            string ext = Path.GetExtension(name)?[1..]; //name.Substring(name.LastIndexOf(".") + 1);
+            return ext.ToLower() switch
             {
-                case "jpg":
-                case "jpeg":
-                    return ImageFormat.Jpeg;
-                case "bmp":
-                    return ImageFormat.Bmp;
-                case "png":
-                    return ImageFormat.Png;
-                case "gif":
-                    return ImageFormat.Gif;
-                default:
-                    return ImageFormat.Jpeg;
-            }
+                "jpg" or "jpeg" => ImageFormat.Jpeg,
+                "bmp" => ImageFormat.Bmp,
+                "png" => ImageFormat.Png,
+                "gif" => ImageFormat.Gif,
+                _ => ImageFormat.Jpeg,
+            };
         }
         #endregion
 
@@ -444,9 +439,9 @@ namespace Admin.Facade.Helper
                     return true;
                 }
             }
-            catch (System.Exception e)
+            catch //(System.Exception e)
             {
-                throw e;
+                throw;
             }
             finally
             {
@@ -480,15 +475,13 @@ namespace Admin.Facade.Helper
         /// <returns></returns>
         private static Stream GetRemoteImage(string url)
         {
-            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+            var request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "GET";
             request.ContentLength = 0;
             request.Timeout = 20000;
-            HttpWebResponse response = null;
-
             try
             {
-                response = (HttpWebResponse)request.GetResponse();
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 return response.GetResponseStream();
             }
             catch

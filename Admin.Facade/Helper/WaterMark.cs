@@ -19,15 +19,15 @@ namespace Agent.Facade.Helper
         /// <param name="watermarkTransparency">水印的透明度 1--10 10为不透明</param>
         public static void AddImageSignPic(string imgPath, string filename, string watermarkFilename, int watermarkStatus, int quality, int watermarkTransparency)
         {
-            if (!File.Exists(TextUtility.GetMapPath(imgPath)))
+            if (!File.Exists(imgPath))
                 return;
-            byte[] _ImageBytes = File.ReadAllBytes(TextUtility.GetMapPath(imgPath));
+            byte[] _ImageBytes = File.ReadAllBytes(imgPath);
             Image img = Image.FromStream(new MemoryStream(_ImageBytes));
-            filename = TextUtility.GetMapPath(filename);
 
-            if (watermarkFilename.StartsWith("/") == false)
-                watermarkFilename = "/" + watermarkFilename;
-            watermarkFilename = TextUtility.GetMapPath(watermarkFilename);
+            //if (watermarkFilename.StartsWith("/") == false)
+            //    watermarkFilename = "/" + watermarkFilename;
+            //watermarkFilename = Path.GetFullPath(watermarkFilename, basePath);
+
             if (!File.Exists(watermarkFilename))
                 return;
             Graphics g = Graphics.FromImage(img);
@@ -153,9 +153,8 @@ namespace Agent.Facade.Helper
         /// <param name="fontsize">字体大小</param>
         public static void AddImageSignText(string imgPath, string filename, string watermarkText, int watermarkStatus, int quality, string fontname, int fontsize)
         {
-            byte[] _ImageBytes = File.ReadAllBytes(TextUtility.GetMapPath(imgPath));
+            byte[] _ImageBytes = File.ReadAllBytes(imgPath);
             Image img = Image.FromStream(new MemoryStream(_ImageBytes));
-            filename = TextUtility.GetMapPath(filename);
 
             Graphics g = Graphics.FromImage(img);
             //设置高质量插值法

@@ -30,8 +30,10 @@ namespace Admin.Facade
             return AideClientFrame;
         }
 
-        public static void ConnectClient(ILoggerFactory loggerFactory) 
+        public static bool ConnectClient(ILoggerFactory loggerFactory) 
         {
+            if (AideClientFrame == null) return false;
+            
             logger = loggerFactory.CreateLogger("Client");
             AideClientFrame.SetCompleted((a, b, c) =>
             {
@@ -60,6 +62,8 @@ namespace Admin.Facade
             AideClientFrame.ConnectAsync(TcpFrame.ip, TcpFrame.port);
 
             AideClientFrame.AddKeepAlive(10);
+
+            return true;
         }
 
         public static ApiPacket AddApi(byte ClassID, byte ActionID, int Millisecond = 30) => new(ClassID, ActionID, Millisecond);

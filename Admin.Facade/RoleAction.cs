@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using System.Linq;
 using Admin.Entity;
 using Admin.Entity.WebDB;
+using Admin.Facade.Session;
 
 namespace Admin.Facade
 {
@@ -23,7 +24,7 @@ namespace Admin.Facade
         /// <summary>
         /// 系统默认存储器
         /// </summary>
-        public static ISession Session => new RedisSession();// {  Id = "10000000" }
+        public static ISession Session => ShellSession.GetSession(); // new RedisSession();// {  Id = "10000000" }
 
         /// <summary>
         /// 重写初始化
@@ -125,7 +126,7 @@ namespace Admin.Facade
         {
             if (RoleAction.Session.TryGetValue(BaseName, out string id))
             {
-                var _session = new RedisSession() { SpareId = id };
+                var _session = ShellSession.GetSession(id); //new RedisSession() { SpareId = id };
                 var keys = _session.GetKeys();//.Contains("Admin");
                 if (keys.Contains("Admin"))
                 {

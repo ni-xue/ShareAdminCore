@@ -12,8 +12,7 @@ namespace Admin.Entity.Config
     [Serializable]
     public class SiteConfig
     {
-        public SiteConfig()
-        { }
+        //public SiteConfig(){ }
 
         private string _webname = "";
         private string _weburl = "";
@@ -40,9 +39,9 @@ namespace Admin.Entity.Config
         private int _filesave = 1;
         private string _fileextension = "";
         private string _videoextension = "";
-        private int _attachsize = 0;
-        private int _videosize = 0;
-        private int _imgsize = 0;
+        private long _attachsize = 0;
+        private long _videosize = 0;
+        private long _imgsize = 0;
         private int _imgmaxheight = 0;
         private int _imgmaxwidth = 0;
         private int _thumbnailheight = 0;
@@ -63,7 +62,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 网站名称
         /// </summary>
-        public string webname
+        public string Webname
         {
             get { return _webname; }
             set { _webname = value; }
@@ -71,7 +70,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 网站域名
         /// </summary>
-        public string weburl
+        public string Weburl
         {
             get { return _weburl; }
             set { _weburl = value; }
@@ -79,7 +78,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 公司名称
         /// </summary>
-        public string webcompany
+        public string Webcompany
         {
             get { return _webcompany; }
             set { _webcompany = value; }
@@ -87,7 +86,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 通讯地址
         /// </summary>
-        public string webaddress
+        public string Webaddress
         {
             get { return _webaddress; }
             set { _webaddress = value; }
@@ -95,7 +94,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 联系电话
         /// </summary>
-        public string webtel
+        public string Webtel
         {
             get { return _webtel; }
             set { _webtel = value; }
@@ -103,7 +102,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 传真号码
         /// </summary>
-        public string webfax
+        public string Webfax
         {
             get { return _webfax; }
             set { _webfax = value; }
@@ -111,7 +110,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 管理员邮箱
         /// </summary>
-        public string webmail
+        public string Webmail
         {
             get { return _webmail; }
             set { _webmail = value; }
@@ -119,7 +118,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 网站备案号
         /// </summary>
-        public string webcrod
+        public string Webcrod
         {
             get { return _webcrod; }
             set { _webcrod = value; }
@@ -130,7 +129,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 网站安装目录
         /// </summary>
-        public string webpath
+        public string Webpath
         {
             get { return _webpath; }
             set { _webpath = value; }
@@ -138,7 +137,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 网站管理目录
         /// </summary>
-        public string webmanagepath
+        public string Webmanagepath
         {
             get { return _webmanagepath; }
             set { _webmanagepath = value; }
@@ -146,7 +145,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 是否开启生成静态
         /// </summary>
-        public int staticstatus
+        public int Staticstatus
         {
             get { return _staticstatus; }
             set { _staticstatus = value; }
@@ -154,7 +153,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 生成静态扩展名
         /// </summary>
-        public string staticextension
+        public string Staticextension
         {
             get { return _staticextension; }
             set { _staticextension = value; }
@@ -162,7 +161,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 开启会员功能
         /// </summary>
-        public int memberstatus
+        public int Memberstatus
         {
             get { return _memberstatus; }
             set { _memberstatus = value; }
@@ -170,7 +169,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 开启评论审核
         /// </summary>
-        public int commentstatus
+        public int Commentstatus
         {
             get { return _commentstatus; }
             set { _commentstatus = value; }
@@ -178,7 +177,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 后台管理日志
         /// </summary>
-        public int logstatus
+        public int Logstatus
         {
             get { return _logstatus; }
             set { _logstatus = value; }
@@ -186,7 +185,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 是否关闭网站
         /// </summary>
-        public int webstatus
+        public int Webstatus
         {
             get { return _webstatus; }
             set { _webstatus = value; }
@@ -194,7 +193,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 关闭原因描述
         /// </summary>
-        public string webclosereason
+        public string Webclosereason
         {
             get { return _webclosereason; }
             set { _webclosereason = value; }
@@ -202,7 +201,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 网站统计代码
         /// </summary>
-        public string webcountcode
+        public string Webcountcode
         {
             get { return _webcountcode; }
             set { _webcountcode = value; }
@@ -213,7 +212,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 附件上传目录
         /// </summary>
-        public string filepath
+        public string Filepath
         {
             get { return _filepath; }
             set { _filepath = value; }
@@ -221,7 +220,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 附件保存方式
         /// </summary>
-        public int filesave
+        public int Filesave
         {
             get { return _filesave; }
             set { _filesave = value; }
@@ -229,7 +228,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 附件上传类型
         /// </summary>
-        public string fileextension
+        public string Fileextension
         {
             get { return _fileextension; }
             set { _fileextension = value; }
@@ -237,7 +236,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 视频上传类型
         /// </summary>
-        public string videoextension
+        public string Videoextension
         {
             get { return _videoextension; }
             set { _videoextension = value; }
@@ -245,7 +244,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 文件上传大小
         /// </summary>
-        public int attachsize
+        public long Attachsize
         {
             get { return _attachsize; }
             set { _attachsize = value; }
@@ -253,7 +252,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 视频上传大小
         /// </summary>
-        public int videosize
+        public long Videosize
         {
             get { return _videosize; }
             set { _videosize = value; }
@@ -261,7 +260,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片上传大小
         /// </summary>
-        public int imgsize
+        public long Imgsize
         {
             get { return _imgsize; }
             set { _imgsize = value; }
@@ -269,7 +268,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片最大高度(像素)
         /// </summary>
-        public int imgmaxheight
+        public int Imgmaxheight
         {
             get { return _imgmaxheight; }
             set { _imgmaxheight = value; }
@@ -277,7 +276,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片最大宽度(像素)
         /// </summary>
-        public int imgmaxwidth
+        public int Imgmaxwidth
         {
             get { return _imgmaxwidth; }
             set { _imgmaxwidth = value; }
@@ -285,7 +284,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 生成缩略图高度(像素)
         /// </summary>
-        public int thumbnailheight
+        public int Thumbnailheight
         {
             get { return _thumbnailheight; }
             set { _thumbnailheight = value; }
@@ -293,7 +292,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 生成缩略图宽度(像素)
         /// </summary>
-        public int thumbnailwidth
+        public int Thumbnailwidth
         {
             get { return _thumbnailwidth; }
             set { _thumbnailwidth = value; }
@@ -301,7 +300,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片水印类型
         /// </summary>
-        public int watermarktype
+        public int Watermarktype
         {
             get { return _watermarktype; }
             set { _watermarktype = value; }
@@ -309,7 +308,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片水印位置
         /// </summary>
-        public int watermarkposition
+        public int Watermarkposition
         {
             get { return _watermarkposition; }
             set { _watermarkposition = value; }
@@ -317,7 +316,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片生成质量
         /// </summary>
-        public int watermarkimgquality
+        public int Watermarkimgquality
         {
             get { return _watermarkimgquality; }
             set { _watermarkimgquality = value; }
@@ -325,7 +324,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 图片水印文件
         /// </summary>
-        public string watermarkpic
+        public string Watermarkpic
         {
             get { return _watermarkpic; }
             set { _watermarkpic = value; }
@@ -333,7 +332,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 水印透明度
         /// </summary>
-        public int watermarktransparency
+        public int Watermarktransparency
         {
             get { return _watermarktransparency; }
             set { _watermarktransparency = value; }
@@ -341,7 +340,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 水印文字
         /// </summary>
-        public string watermarktext
+        public string Watermarktext
         {
             get { return _watermarktext; }
             set { _watermarktext = value; }
@@ -349,7 +348,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 文字字体
         /// </summary>
-        public string watermarkfont
+        public string Watermarkfont
         {
             get { return _watermarkfont; }
             set { _watermarkfont = value; }
@@ -357,7 +356,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 文字大小(像素)
         /// </summary>
-        public int watermarkfontsize
+        public int Watermarkfontsize
         {
             get { return _watermarkfontsize; }
             set { _watermarkfontsize = value; }
@@ -368,7 +367,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 数据库表前缀
         /// </summary>
-        public string sysdatabaseprefix
+        public string Sysdatabaseprefix
         {
             get { return _sysdatabaseprefix; }
             set { _sysdatabaseprefix = value; }
@@ -376,7 +375,7 @@ namespace Admin.Entity.Config
         /// <summary>
         /// 加密字符串
         /// </summary>
-        public string sysencryptstring
+        public string Sysencryptstring
         {
             get { return _sysencryptstring; }
             set { _sysencryptstring = value; }

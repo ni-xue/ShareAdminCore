@@ -5,12 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Helper\**" />
-    <EmbeddedResource Remove="Helper\**" />
-    <None Remove="Helper\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="QRCoder" Version="1.4.1" />
   </ItemGroup>
 
