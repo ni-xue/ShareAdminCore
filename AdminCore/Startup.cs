@@ -100,10 +100,10 @@ namespace AdminCore
             provider.Mappings.Add(".php", "text/plain");//手动设置对应MIME 
             provider.Mappings.Add(".aspx", "text/plain");
             staticfile.ContentTypeProvider = provider;
-            staticfile.OnPrepareResponse = (a) => 
-            {
+            //staticfile.OnPrepareResponse = (a) => 
+            //{
                 
-            };
+            //};
             app.UseStaticFiles(staticfile);
 
             app.UseDiySession();
@@ -123,7 +123,7 @@ namespace AdminCore
 
             FacadeManage.UseSqlLog(loggerFactory); //注册相关SQL日志。
 
-            //Menu.Reload(); //获取默认系统菜单
+            Menu.Reload(); //获取默认系统菜单
 
             TcpFrame.ConnectClient(loggerFactory);
 

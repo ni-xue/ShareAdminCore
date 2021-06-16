@@ -34,9 +34,12 @@ namespace Admin.Facade.Session
 
         private static Tool.Sockets.SupportCode.KeepAlive keep;
 
-        public static void StartKeep(byte minute) 
+        public static void StartKeep(byte minute)
         {
-            keep = new(minute, IsSecond);
+            if (keep == null)
+            {
+                keep = new(minute, IsSecond);
+            }
         }
 
         private static void IsSecond()
