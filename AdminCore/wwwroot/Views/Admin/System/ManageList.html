@@ -6,7 +6,7 @@
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.8/css/layui.css" media="all">
     <link rel="stylesheet" href="../../css/public.css" media="all">
 </head>
 <body>
@@ -40,6 +40,14 @@
                     <button type="button" class="layui-btn" lay-event="Nullity:1">禁用</button>
                     <button type="button" class="layui-btn" lay-event="IsIdent"> 解绑两步认证 </button>
                 </div>
+
+                <div class="layui-btn-group">
+                    <button type="button" class="layui-btn" lay-event="axzt">踢 出</button>
+                </div>
+
+                <div class="layui-btn-group">
+                    <button type="button" class="layui-btn layui-btn-primary" lay-event="data-search-btn">刷 新</button>
+                </div>
             </script>
 
             <table class="layui-hide" id="currentTableId" lay-filter="currentTableFilter"></table>
@@ -64,7 +72,7 @@
             </script>
         </div>
     </div>
-    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../lib/layui-v2.6.8/layui.js" charset="utf-8"></script>
     <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
     <script>
         layui.use(['form', 'table', 'nixue'], function () {
@@ -89,9 +97,10 @@
                     { field: 'Logins', align: "center", title: '登录次数' },
                     { field: 'IsIdent', align: "center", title: '两步认证', sort: true, templet: '#IsIdent' },
                     { field: 'LastLoginIP', align: "center", title: '上次登陆地址' },
-                    { field: 'LastLoginDate', align: "center", title: '上次登陆时间', sort: true, templet: function (res) { return '<em>' + nx.GetDateString('yyyy-MM-dd hh:mm:ss', res.LastLoginDate) + '</em>' }  },
+                    { field: 'LastLoginDate', align: "center", title: '上次登陆时间', sort: true, templet: function (res) { return '<em>' + nx.GetDateString('yyyy-MM-dd hh:mm:ss', res.LastLoginDate) + '</em>' } },
                     { field: 'FinalLoginIP', align: "center", title: '最后登陆地址' },
-                    { field: 'FinalLoginDate', align: "center", title: '最后登陆时间', sort: true, templet: function (res) { return '<em>' + nx.GetDateString('yyyy-MM-dd hh:mm:ss', res.FinalLoginDate) + '</em>' }  },
+                    { field: 'FinalLoginDate', align: "center", title: '最后登陆时间', sort: true, templet: function (res) { return '<em>' + nx.GetDateString('yyyy-MM-dd hh:mm:ss', res.FinalLoginDate) + '</em>' } },
+                    //{ field: 'axzt', align: "center", width: 80, title: '在线状态', toolbar: '#axzt' },
                     { title: '修改', minWidth: 150, toolbar: '#currentTableBar', align: "center" }
                 ]],
                 limits: [10, 15, 20, 25, 50, 100],
@@ -110,15 +119,36 @@
                             nx.GetIpAddress(that.data.LastLoginIP).then(function (a) { //console.log(a);
                                 that.tds.LastLoginIP.text(a);//that.td.text(a);
                             });
+
+                            //if (res.admin === that.data.BaseName) {
+                            //    that.tds.axzt.html(`<span style="color: red">当前在线</span>`);
+                            //} else {
+                            //    var list = res.NameKey;
+                            //    var html1 = `<a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="Xx">在线</a>`;
+                            //    var html2 = `<span style="color: #999999b5">离线</span>`;
+                            //    for (var i = 0; i < list.length; i++) {
+                            //        if (that.data.BaseName == list[i]) {
+                            //            that.tds.axzt.html(html1);
+                            //            break;
+                            //        } else {
+                            //            that.tds.axzt.html(html2);
+                            //        }
+                            //    }
+                            //}
                         }
                     });
-
-
+                    nx.TableSort(this, table);
                 },
                 skin: 'line',
-                height: 'full-200',
+                height: 'full-60',
                 cellMinWidth: 80,
-                parseData: nx.TableParseData
+                parseData: function (res) {
+                    var data = nx.TableParseData(res);
+                    data.NameKey = res.data.NameKey;
+                    data.admin = res.data.admin;
+                    return data;
+                },
+                autoSort: false
             });
 
             function tablereload(data) {
@@ -133,7 +163,7 @@
             }
 
             // 监听搜索操作
-            form.on('submit(data-search-btn)', function (data) {
+            nx.OnForm('submit(data-search-btn)', function (data) {
                 //var result = JSON.stringify(data.field);
                 //layer.alert(result, {
                 //    title: '最终的搜索信息'
@@ -173,9 +203,16 @@
                         return;
                     } else {
                         var getidlist = nx.GetIds(data, 'ID');
+                        var Namelist = nx.GetIds(data, 'BaseName');
                         nx.Psot(function (result) {
-                            tablereload();
-                            layer.msg(result.msg);
+                            if (result.code==0) {
+                                Logout(Namelist);
+                                tablereload();
+                                nx.msg(result.msg, null, 1);
+                            } else {
+                                nx.msg(result.msg, null, 2);
+                            }
+                          
                         }, '../../Api/AdminServers/DeleteBaseUsers', { idlist: getidlist });
                     }
                 }
@@ -209,8 +246,31 @@
                         nx.Psot(function (result) {
                             tablereload();
                             layer.msg(result.msg);
-                        }, '../../Api/AdminServers/SetIsIdents', { idlist: getidlist, isIdent: 0 });
+                        }, '../../Api/AdminServers/SetBaseIsIdents', { idlist: getidlist, isIdent: 0 });
                     }
+                } else if (obj.event === 'data-search-btn') {
+                    tablereload(data);
+                    return false;
+                } else if (obj.event === 'axzt') {
+                    var checkStatus = table.checkStatus('currentTableId')
+                        , data = checkStatus.data;
+                    if (data.length === 0) {
+                        layer.msg('请选中需要操作的数据！', { offset: '6px' });
+                        return;
+                    }else if (data.length > 1) {
+                        layer.msg('请选中单个账号！', { offset: '6px' });
+                        return;
+                    }
+                    else {
+                        var getidlist = nx.GetIds(data, 'BaseName');
+                        nx.confirm('确定将该管理员下线吗？', function (index) {
+                            nx.Psot(function (result) {
+                                tablereload();
+                                nx.alert(result.msg);
+                            }, '../../Api/AdminServers/ManageLogouts', { UserName: getidlist });
+                        });
+                    }
+                    return false;
                 }
             });
 
@@ -218,6 +278,14 @@
             table.on('checkbox(currentTableFilter)', function (obj) {
                 console.log(obj)
             });
+
+
+
+            function Logout(BaseName) {
+                nx.Psot(function (result) {
+                }, '../../Api/AdminServers/ManageLogouts', { UserName: BaseName });
+            }
+
 
             table.on('tool(currentTableFilter)', function (obj) {
                 var data = obj.data;
@@ -235,6 +303,14 @@
                         layer.full(index);
                     });
                     return false;
+                } else if (obj.event === 'Xx') {
+                    nx.confirm('确定将该管理员下线吗？', function (index) {
+                        nx.Psot(function (result) {
+                            tablereload();
+                            nx.alert(result.msg);
+                        }, '../../Api/AdminServers/ManageLogouts', { UserName: data.BaseName });
+                    });
+
                 }
             });
 

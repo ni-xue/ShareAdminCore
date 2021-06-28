@@ -103,9 +103,11 @@ namespace Admin.Facade
 
                     session.Set("UserInfo", new PermissionsMenu.UserInfo()
                     {
+                        Token = session.Id,
                         Id = userTicket.ID,
                         Name = userTicket.BaseName,
-                        IsEdit = isedit
+                        IsEdit = isedit,
+                        TokenUrl = Tool.Utils.AppSettings.Get("ServerUrl")
                     });
                 }
 
@@ -120,6 +122,18 @@ namespace Admin.Facade
                 session.Clear();
                 RoleAction.Session.Remove(userTicket.BaseName.ToLower());
             }
+        }
+
+        public static bool Logout(string username)
+        {
+            if (RoleAction.Session.TryGetValue(username, out string id))
+            {
+                var _session = ShellSession.GetSession(id);
+                _session.Clear();
+                RoleAction.Session.Remove(username.ToLower());
+                return true;
+            }
+            return false;
         }
 
         public static bool IsRepeatLogin(string BaseName)

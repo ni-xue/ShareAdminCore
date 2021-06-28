@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="format-detection" content="telephone=no">
     <link rel="icon" href="images/favicon.ico">
-    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.8/css/layui.css" media="all">
     <link rel="stylesheet" href="../../css/layuimini.css?v=2.0.4.2" media="all">
     <link rel="stylesheet" href="../../css/themes/default.css" media="all">
     <link rel="stylesheet" href="../../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
@@ -124,16 +124,19 @@
 
     </div>
 </div>
-<script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+<script src="../../lib/layui-v2.6.8/layui.js" charset="utf-8"></script>
 <script src="../../js/lay-config.js?v=2.0.0" charset="utf-8"></script>
 
 <script>
     layui.use(['jquery', 'layer', 'miniAdmin', 'miniTongji', "nixue"], function () {
+        if (!layui.AddRoute(false)) return;
         var $ = layui.jquery,
             layer = layui.layer,
             miniAdmin = layui.miniAdmin,
             miniTongji = layui.miniTongji,
             nx = layui.nixue;
+
+        if (!miniAdmin.IsAuthority()) return;
 
         var options = {
             iniUrl: "../../Api/AdminServers/GetMenusInfos",    // 初始化接口 api/init.json
@@ -147,6 +150,10 @@
             maxTabNum: 20,              // 最大的tab打开数量
         };
         miniAdmin.render(options);
+
+        //var wsImpl = window.WebSocket || window.MozWebSocket;
+        //// create a new websocket and connect
+        //window.ws = new wsImpl('ws://127.0.0.1:3333/tcp');//这里要与服务器开启的地址保证一致哦。
 
         // 百度统计代码，只统计指定域名
         //miniTongji.render({

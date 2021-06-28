@@ -128,6 +128,8 @@ namespace AdminCore
             TcpFrame.ConnectClient(loggerFactory);
 
             app.GetObject<UpLoad>().SetBasePath(env.WebRootPath);
+
+            Api.AdminServers.StartBaseLog();
         }
         public async Task AllException(HttpContext context, Exception exception)
         {

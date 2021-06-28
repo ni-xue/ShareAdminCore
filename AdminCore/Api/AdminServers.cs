@@ -74,7 +74,7 @@ namespace AdminCore.Api
         #region 菜单管理
 
         [MvcView("Index", ActionEnum.View)]
-        [Ashx(ID = "GetMenusInfos", State = AshxState.Get)]
+        [Ashx(ID = "GetMenusInfos", State = AshxState.Post)]
         public async Task GetMenusInfo()
         {
             var menus = Session.Get<List<MenuHead>>("Menu");
@@ -304,6 +304,20 @@ namespace AdminCore.Api
             await JsonAsync(_ajv);
         }
 
+        /// <summary>
+        /// 强制下线
+        /// </summary>
+        /// <param name="UserName">用户名</param>
+        /// <returns></returns>
+        [Ashx(ID = "ManageLogouts", State = AshxState.Post)]
+        [MvcView("ManageList", ActionEnum.Edit, "强制下线")]
+        public async Task ManageLogout(string UserName)
+        {
+            AjaxJson _ajv = new();
+            _ajv.code = RoleAction.Logout(UserName) ? 0 : 1;
+            _ajv.msg = "成功";//_ajv.code == 1 ? "失败" : "成功";
+            await JsonAsync(_ajv);
+        }
 
         /// <summary>
         /// 获取管理用户详情
@@ -505,10 +519,23 @@ namespace AdminCore.Api
             AjaxJson _ajv = new();
             if (idlist != "")
             {
-                if (FacadeManage.AideAdminFacade.DeleteBaseUser(idlist) > 0)
+                if (idlist.Contains(anmininfo.ID.ToString()))
                 {
-                    _ajv.code = 0;
-                    _ajv.msg = "删除成功！";
+                    _ajv.code = 101;
+                    _ajv.msg = "不能删除含有自己的账号！";
+                }
+                else
+                {
+                    if (FacadeManage.AideAdminFacade.DeleteBaseUser(idlist) > 0)
+                    {
+                        _ajv.code = 0;
+                        _ajv.msg = "删除成功！";
+                    }
+                    else
+                    {
+                        _ajv.code = 1;
+                        _ajv.msg = "删除失败！";
+                    }
                 }
             }
             else
@@ -608,13 +635,7 @@ namespace AdminCore.Api
             _ajv.code = 0;
             _ajv.msg = "请求成功！";
 
-            _ajv.SetDataItem("PageCount", BaseLogList.PageCount);
-
-            _ajv.SetDataItem("RecordCount", BaseLogList.RecordCount);
-
-            _ajv.SetDataItem("PageIndex", BaseLogList.PageIndex);
-
-            _ajv.SetDataItem("PageSize", BaseLogList.PageSize);
+            _ajv.SetPage(BaseLogList);
 
             _ajv.SetDataItem("list", BaseLogList.PageTable.ToDictionary());
 
@@ -668,13 +689,7 @@ namespace AdminCore.Api
             _ajv.code = 0;
             _ajv.msg = "请求成功！";
 
-            _ajv.SetDataItem("PageCount", RoleDirectoryList.PageCount);
-
-            _ajv.SetDataItem("RecordCount", RoleDirectoryList.RecordCount);
-
-            _ajv.SetDataItem("PageIndex", RoleDirectoryList.PageIndex);
-
-            _ajv.SetDataItem("PageSize", RoleDirectoryList.PageSize);
+            _ajv.SetPage(RoleDirectoryList);
 
             _ajv.SetDataItem("list", RoleDirectoryList.PageTable.ToDictionary());
 
@@ -806,17 +821,6 @@ namespace AdminCore.Api
                         //加入操作日志
                         AddBaseLog(mvc, Config.ToJson());
 
-                        //FacadeManage.AideAdminFacade.InsertBaseLog(new BaseLog
-                        //{
-                        //    BaseID = anmininfo.ID,
-                        //    BaseName = anmininfo.BaseName,
-                        //    ModuleType = mvc.Action.ToString(),
-                        //    ModuleText = mvc.Remark + Config.ToJson(),
-                        //    BaseIp = Context.GetIP(),
-                        //    KindID = 0,
-                        //    ServerID = 0
-                        //});
-
                         if (userPermission.Roles.Count == con)
                         {
                             _ajv.msg = "修改成功（权限也成功）！";
@@ -924,11 +928,6 @@ namespace AdminCore.Api
                         _ajv.code = 101;
                         _ajv.msg = "您的账号已被冻结，请联系超管！";
                     }
-                    else if (!RoleAction.IsRepeatLogin(BaseName))
-                    {
-                        _ajv.code = 105;
-                        _ajv.msg = "您的账号已登录，请联系超管！";
-                    }
                     else
                     {
                         //登录成功保存用户信息--谷歌验证部分
@@ -1017,7 +1016,12 @@ namespace AdminCore.Api
 #if DEBUG
                 mobileKey = iscode;
 #endif
-                if (iscode == mobileKey)
+                if (!RoleAction.IsRepeatLogin(anmininfo.BaseName))
+                {
+                    _ajv.code = 105;
+                    _ajv.msg = "您的账号已登录，请联系超管！";
+                }
+                else if (iscode == mobileKey)
                 {
                     if (anmininfo.IsIdent == 0)
                     {
@@ -1085,11 +1089,34 @@ namespace AdminCore.Api
 
         #region Sql 用户操作日志打印
 
-        private readonly Queue<BaseLog> baseLogs = new();
+        private static readonly Tool.Utils.ThreadQueue.TaskOueue<BaseLog, bool> taskOueue = new(WriteBaselog);
+
+        public static void StartBaseLog()
+        {
+            //if (!taskOueue.IsContinueWith)
+            //{
+            //    taskOueue.ContinueWith += TaskOueue_ContinueWith;
+            //}
+            taskOueue.ContinueWith += TaskOueue_ContinueWith;
+        }
+
+        static bool WriteBaselog(BaseLog log)
+        {
+            FacadeManage.AideAdminFacade.InsertBaseLog(log);//加入操作日志
+            return true;
+        }
+
+        static void TaskOueue_ContinueWith(BaseLog arg1, bool arg2, Exception arg3)
+        {
+            if (arg3 != null)
+            {
+                Log.Error("队列异常：", arg3, LogFilePath);
+            }
+        }
 
         private void AddBaseLog(string ModuleType, string ModuleText)
         {
-            baseLogs.Enqueue(new BaseLog
+            taskOueue.Add(new BaseLog
             {
                 BaseID = anmininfo.ID,
                 BaseName = anmininfo.BaseName,
@@ -1098,23 +1125,24 @@ namespace AdminCore.Api
                 BaseIp = Context.GetIP()
             });
         }
+
         private void AddBaseLog(MvcView mvc, string Remark = null)
         {
             AddBaseLog(mvc.Action.ToString(), $"{mvc.Remark}---{Remark}");
         }
 
-        /// <summary>
-        /// 写入操作信息
-        /// </summary>
-        /// <param name="ashxRoute"></param>
-        protected override void OnResult(Ashx ashx)
-        {
-            while (baseLogs.TryDequeue(out BaseLog log))
-            {
-                //加入操作日志
-                FacadeManage.AideAdminFacade.InsertBaseLog(log);
-            }
-        }
+        ///// <summary>
+        ///// 写入操作信息
+        ///// </summary>
+        ///// <param name="ashxRoute"></param>
+        //protected override void OnResult(Ashx ashx)
+        //{
+        //    while (baseLogs.TryDequeue(out BaseLog log))
+        //    {
+        //        //加入操作日志
+        //        FacadeManage.AideAdminFacade.InsertBaseLog(log);
+        //    }
+        //}
 
         #endregion
 

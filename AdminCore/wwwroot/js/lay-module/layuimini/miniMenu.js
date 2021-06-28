@@ -81,30 +81,37 @@ layui.define(["element","laytpl" ,"jquery"], function (exports) {
         renderChildrenMenu:function(menuList,options){
             var me = this ;
             menuList = menuList || [] ;
-            var html = this.each(menuList,function (idx,menu) {
-                if(menu.child && menu.child.length){
-                    menu.children = me.renderChildrenMenu(menu.child,{ childOpenClass: options.childOpenClass || '' });
+            var html = this.each(menuList, function (idx, menu) {
+                var MenuHtml = '';
+                if (!menu.hide) {
+                    if (menu.child && menu.child.length) {
+                        menu.children = me.renderChildrenMenu(menu.child, { childOpenClass: options.childOpenClass || '' });
+                    }
+                    menu.className = "";
+                    menu.childOpenClass = options.childOpenClass || ''
+                    MenuHtml = me.compileMenu(menu, true);
                 }
-                menu.className = "" ;
-                menu.childOpenClass = options.childOpenClass || ''
-                return me.compileMenu(menu,true)
+                return MenuHtml;
             }).join("");
             return me.compileMenuContainer({ children:html },true)
         },
         renderLeftMenu :function(leftMenus,options){
             options = options || {};
             var me = this ;
-            var leftMenusHtml =  me.each(leftMenus || [],function (idx,leftMenu) { // 左侧菜单遍历
-                var children = me.renderChildrenMenu(leftMenu.child, { childOpenClass:options.childOpenClass });
-                var leftMenuHtml = me.compileMenu({
-                    href: leftMenu.href,
-                    target: leftMenu.target,
-                    childOpenClass: options.childOpenClass,
-                    icon: leftMenu.icon,
-                    title: leftMenu.title,
-                    children: children,
-                    className: '',
-                });
+            var leftMenusHtml = me.each(leftMenus || [], function (idx, leftMenu) { // 左侧菜单遍历
+                var leftMenuHtml = '';
+                if (!leftMenu.hide) {
+                    var children = me.renderChildrenMenu(leftMenu.child, { childOpenClass: options.childOpenClass });
+                    leftMenuHtml = me.compileMenu({
+                        href: leftMenu.href,
+                        target: leftMenu.target,
+                        childOpenClass: options.childOpenClass,
+                        icon: leftMenu.icon,
+                        title: leftMenu.title,
+                        children: children,
+                        className: '',
+                    });
+                }
                 return leftMenuHtml ;
             }).join("");
 
@@ -128,26 +135,28 @@ layui.define(["element","laytpl" ,"jquery"], function (exports) {
 
             if (menuChildOpen) childOpenClass = ' layui-nav-itemed';
             var headerMenuHtml = this.each(menuList, function (index, val) { //顶部菜单渲染
-                var menu = 'multi_module_' + index ;
-                var id = menu+"HeaderId";
-                var topMenuItemHtml = "" ;
-                topMenuItemHtml = me.compileMenu({
-                    className:headerMenuCheckDefault,
-                    menu:menu,
-                    id:id,
-                    title:val.title,
-                    href:"",
-                    target:"",
-                    children:""
-                });
-                leftMenuHtml+=me.renderLeftMenu(val.child,{
-                    parentMenuId:menu,
-                    childOpenClass:childOpenClass,
-                    leftMenuCheckDefault:leftMenuCheckDefault
-                });
-                headerMobileMenuHtml +=me.compileMenu({ id:id,menu:menu,id:id,icon:val.icon, title:val.title, },true);
-                headerMenuCheckDefault = "";
-                leftMenuCheckDefault = "layui-hide" ;
+                var topMenuItemHtml = "";
+                if (!val.hide) {
+                    var menu = 'multi_module_' + index;
+                    var id = menu + "HeaderId";
+                    topMenuItemHtml = me.compileMenu({
+                        className: headerMenuCheckDefault,
+                        menu: menu,
+                        id: id,
+                        title: val.title,
+                        href: "",
+                        target: "",
+                        children: ""
+                    });
+                    leftMenuHtml += me.renderLeftMenu(val.child, {
+                        parentMenuId: menu,
+                        childOpenClass: childOpenClass,
+                        leftMenuCheckDefault: leftMenuCheckDefault
+                    });
+                    headerMobileMenuHtml += me.compileMenu({ id: id, menu: menu, id: id, icon: val.icon, title: val.title, }, true);
+                    headerMenuCheckDefault = "";
+                    leftMenuCheckDefault = "layui-hide";
+                }
                 return topMenuItemHtml ;
             }).join("");
             $('.layui-layout-body').addClass('layuimini-multi-module'); //多模块标识

@@ -185,6 +185,14 @@ layui.define(["jquery", 'form', "element"], function (exports) {
         AddVue: function (options) {
             $("body").hide();
             console.log("正在加载Vue...");
+            if (options.mounted) {
+                var _mounted = options.mounted;
+                options.mounted = function () {
+                    console.log("已捕获全局Vue...");
+                    nixue.Vue = this;
+                    _mounted.call(this);
+                };
+            }
             if (!options.watch) {
                 if (options.data.form) {
                     var filter = options.data.form.filter;
@@ -200,7 +208,7 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                     eval(test);
                     function formval(key, val) {
                         var source = nixue.form.val(filter)[key];
-                        if (source != undefined && source != val[key]) {
+                        if (source != val[key]) {//source != undefined && 
                             nixue.form.val(filter, val);
                             console.log("Vue渲染", filter + '->form.' + key, '源：', source, '新：', val[key]);
                         }
@@ -244,7 +252,7 @@ layui.define(["jquery", 'form', "element"], function (exports) {
             var keys = Object.keys(obj);
             for (var i = 0; i < keys.length; i++) {
                 var source = obj[keys[i]], NewVal;
-                if (typeof source != 'number' && isNumber(source)) {
+                if (typeof source != 'number' && typeof source == 'string' && isNumber(source)) {
                     NewVal = parseFloat(source);
                     console.log("ToInts:->", keys[i], '源：', source, '新：', NewVal);
                     obj[keys[i]] = NewVal;
@@ -265,6 +273,8 @@ layui.define(["jquery", 'form', "element"], function (exports) {
         ThisClose: function () {
             if (nixue.BaseNixue) {
                 nixue.BaseNixue.LayerClose(nixue.Window.name);
+            } else {
+                nixue.LayerClose(nixue.Window.name);
             }
         },
         /**
@@ -286,15 +296,24 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                 dataType: "json",
                 async: isasync,//异步     
                 success: function (data) {
-                    if (data.code === 2001 || data.code === 500) {
+                    if (data.code === 2001) {
                         nixue.alert(data.msg, "rerun");
                         return;
-                    } else if (data.code === 2010) {
-                        var href = sessionStorage.layuiminiHomeHref;
+                    }
+                    else if (data.code === 500) {
+                        nixue.alert(data.msg, "reload");
+                        return;
+                    }
+                    else if (data.code === 2010) {
+                        var href = sessionStorage.AuthorityErrorUrl;
                         nixue.alert("您没有操作权限，请联系管理员！", href);
                         return;
                     }
-                    callback(data);
+                    if (nixue.Vue) {
+                        callback.call(nixue.Vue, data);
+                    } else {
+                        callback(data);
+                    }
                     layer.close(_loadId);//layer.closeAll();
                 },
                 error: function () {
@@ -355,14 +374,22 @@ layui.define(["jquery", 'form', "element"], function (exports) {
             function _close(index, layero) { if (typeof end === "function") end(index, layero); }
         },
         /**
-         * 将毫秒转换成时间
+         * 将时间-减去当前时间获取差时
          * @param {any} _date
          */
         GetTimeString: function (_date) {
-            var date = new Date().getTime() - new Date(_date).getTime();
-            var days = Math.floor(date / (24 * 3600 * 1000))
+            var second = new Date().getTime() - new Date(_date).getTime();
+            return this.GetLastLogonTime(second);
+        },
+        /**
+         * 将毫秒转换成时间
+         * @param {any} second
+         */
+        GetLastLogonTime: function (second) {
+            if (second == null) return '无记录。';
+            var days = Math.floor(second / (24 * 3600 * 1000))
             //计算出小时数
-            var leave1 = date % (24 * 3600 * 1000)    //计算天数后剩余的毫秒数
+            var leave1 = second % (24 * 3600 * 1000)    //计算天数后剩余的毫秒数
             var hours = Math.floor(leave1 / (3600 * 1000))
             //计算相差分钟数
             var leave2 = leave1 % (3600 * 1000)        //计算小时数后剩余的毫秒数
@@ -420,8 +447,20 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                             re = Math.round(num * 100) / 100; //num;
                         }
                         break;
+                    case "b":
+                        num = num / 100;
+                        if (parseFloat(num) >= 10000 || parseFloat(num) <= -10000) {
+                            re = (Math.round((num / 10000) * 100) / 100).toFixed(2) + "万"; //(num / 10000).toFixed(2) + "万"; Math.floor
+                        } else {
+                            re = (Math.round(num * 100) / 100).toFixed(2); //num;
+                        }
+                        break;
                     default:
                         re = Math.round(num * 100) / 100; //Number(num).toFixed(2);
+                }
+            } else {
+                if (unit === 'b') {
+                    re = '0.00';
                 }
             }
             return re;
@@ -439,11 +478,33 @@ layui.define(["jquery", 'form', "element"], function (exports) {
         },
         //去掉字符串里面的数字
         RemoveComma: function (num) {
-            if (num === 0) {
-                return 0;
+            if (typeof num == 'number') {
+                return num;
             }
             return num.replace(/,/g, '');
         },
+        //每4位字符增加’，‘号
+        //toThousands: function (num) {
+        //    num = (num / 100).toFixed(2);
+        //    var TofixedNumber = num.substring((num.length - 3), num.length);
+        //    var result = [], counter = 0;
+        //    num = (num || 0).toString().split('');
+        //    for (var i = num.length - 4; i >= 0; i--) {
+        //        counter++;
+        //        result.unshift(num[i]);
+        //        if (!(counter % 4) && i != 0) { result.unshift(','); }
+        //    }
+        //    var res = result.join('') + TofixedNumber;
+        //    return res;
+        //},
+        ////去掉字符串里面的数字
+        //RemoveComma: function (num) {
+        //    if (typeof num == 'number') {
+        //        return parseInt(num * 100);
+        //    }
+        //    var res = num.replace(/,/g, '');
+        //    return parseInt(res * 100);
+        //},
         //按照有效数字位数进行四舍五入，默认6位有效数字
         signFigures: function (num, rank = 6) {
             if (!num) return (0);
@@ -461,6 +522,21 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                 ans = Math.round(number);
             }
             return (ans * sign);
+        },
+        // 加法
+        accAdd: function (arg1, arg2) {
+            var r1, r2, m;
+            try { r1 = arg1.toString().split(".")[1].length; } catch (e) { r1 = 0; }
+            try { r2 = arg2.toString().split(".")[1].length; } catch (e) { r2 = 0; }
+            m = Math.pow(10, Math.max(r1, r2));
+            return (this.accMul(arg1, m) + this.accMul(arg2, m)) / m;
+        },
+        // 乘法
+        accMul: function (arg1, arg2) {
+            var m = 0, s1 = arg1.toString(), s2 = arg2.toString();
+            try { m += s1.split(".")[1].length } catch (e) { }
+            try { m += s2.split(".")[1].length } catch (e) { }
+            return Number(s1.replace(".", "")) * Number(s2.replace(".", "")) / Math.pow(10, m)
         },
         /**
          * 获取复选框选中的Id-特定表格
@@ -492,6 +568,7 @@ layui.define(["jquery", 'form', "element"], function (exports) {
         SetDateString: function (int, fmt, date) {
             if (typeof date == 'string') date = new Date(date);
             let val = date ? date : new Date();
+            if (val.constructor.name != 'Date') return "-";
             val.setDate(val.getDate() + int);
             return val.format(fmt);
         },
@@ -503,15 +580,21 @@ layui.define(["jquery", 'form', "element"], function (exports) {
         GetDateString: function (fmt, date) {
             if (typeof date == 'string') date = new Date(date);
             let val = date ? date : new Date();
+            if (val.constructor.name != 'Date') return "-";
             return val.format(fmt);
         },
         TableParseData: function (res) { //将原始数据解析成 table 组件所规定的数据
-            if (res.code === 2001 || res.code === 500) {
+            if (res.code === 2001) {
                 nixue.alert(res.msg, "rerun");
                 return { code: res.code, msg: res.msg, count: 0, data: [] };
-            } else if (res.code === 2010) {
+            }
+            else if (res.code === 500) {
+                nixue.alert(res.msg, "reload");
+                return { code: res.code, msg: res.msg, count: 0, data: [] };
+            }
+            else if (res.code === 2010) {
                 //ltMenuData.RemoveNavid("", getCookie("MenuNavId"));
-                var href = sessionStorage.layuiminiHomeHref
+                var href = sessionStorage.AuthorityErrorUrl
                 nixue.alert("您没有操作权限，请联系管理员！", href);
                 return { code: res.code, msg: res.msg, count: 0, data: [] };
             }
@@ -538,7 +621,7 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                     header: null,
                     body: null,
                 }
-                var that = options.table.siblings('div[lay-id="currentTableId"]');
+                var that = options.table.siblings('div[lay-id="' + options.table[0].id + '"]');
                 _table.header = that.find('div.layui-table-header table.layui-table');
                 _table.body = that.find('div.layui-table-body.layui-table-main table.layui-table');
                 options.data.forEach(function (item, index) {
@@ -584,7 +667,8 @@ layui.define(["jquery", 'form', "element"], function (exports) {
         KeySetSelect: function (select, Data, Key) {
             return select.KeySetSelect(Data, Key);
         },
-        TimeRefresh: function (on) {
+        TimeRefresh: function (on, tableid) {
+            TimeRefreshactive.TimeRefreshOut.tableid = tableid;
             TimeRefreshactive.TimeRefreshOut.on = on;
             TimeRefreshactive.setUpopen();
         },
@@ -642,12 +726,101 @@ layui.define(["jquery", 'form', "element"], function (exports) {
             }
             if (!array_search(keys, 'id')) {
                 options.id = new Date().getTime()
+            } else {
+                let _layerid = $('div.layui-layer-content#' + options.id);
+                if (_layerid.length > 0) {
+                    nixue.msg("您点击的页面已经打开啦！不能重复点击哦", null, 2);
+                    let index = _layerid.parent("div").attr("times");
+                    layer.restore(index);
+                }
+            }
+            var success = options.success;
+            options.success = function () {
+                $(':focus').blur();//解决弹框越来越黑问题
+                if (typeof success == "function") success();
             }
             var index = layer.open(options);
-            $(window).on("resize", function () {
-                layer.full(index);
+            $(window).on("resize", function (e) {
+                setTimeout(function () {
+                    var _top = $('div#layui-layer' + index);
+                    if (_top.length > 0) {
+                        var _width = _top.width();
+                        if (_width > window.document.body.clientWidth) {// - 30
+                            layer.full(index);//full/min/restore -分别代表最大化、最小化、还原 后触发的回调
+                        }
+                    } else {
+                        $(window).unbind(e);
+                    }
+                }, 20);
             });
             return index;
+        },
+        IsStringEmpty: function (txt) {
+            if (txt != null && typeof txt != "string") {
+                txt = txt.toString();
+            }
+            if (txt == null || txt.trim().length == 0) {
+                return true;
+            }
+            return false;
+        },
+        checkPhone: function (phone) {
+            return !(/^1[34578]\d{9}$/.test(phone));
+        },
+        OnForm: function (onname, on, isfocus = true) {
+            form.on(onname, function (data) {
+                if (isfocus) { $(':focus').blur(); }//解决弹框越来越黑问题
+                if (typeof on == "function") return on.call(this, data);
+            });
+        },
+        IsDialog: function () {
+            return $("div.layui-layer-dialog").length > 0;
+        },
+        FileCsv: function (options) {
+            var keys = Object.keys(options);
+            if (!array_search(keys, 'elem')) {
+                return nixue.alert("没有配置标签。");
+            }
+            if (!array_search(keys, 'upload')) {
+                return nixue.alert("没有提供上传对象。");
+            }
+            if (!array_search(keys, 'choose')) {
+                return nixue.alert("没有提供上传对象。");
+            }
+            var uploadInst = options.upload.render({
+                elem: options.elem
+                , exts: 'csv'
+                , accept: 'file'
+                , auto: false
+                , choose: function (obj) {
+                    //将每次选择的文件追加到文件队列
+                    var files = obj.pushFile();
+                    for (let index in files) {
+                        if (typeof (FileReader) != "undefined") {
+                            var reader = new FileReader();
+                            reader.onload = function (e) {
+                                var table = {};
+                                var rows = e.target.result.split("\n");
+                                for (var i = 0; i < rows.length; i++) {
+                                    if (rows[i] == '') continue;
+                                    var cells = rows[i].split(",");
+                                    for (var j = 0; j < cells.length; j++) {
+                                        if (i == 0) table["A" + j] = [];
+                                        table["A" + j].push(cells[j].replace(/\"/g, "").replace('\r', ""));
+                                    }
+                                }
+                                console.log(table);
+                                options.choose(table);
+                            }
+                            reader.readAsText(files[index]);
+                        } else {
+                            nx.alert("仅支持 h5以上 浏览器。");
+                        }
+                        delete files[index];
+                    }
+                    uploadInst.config.item.next('.layui-upload-file').val(null);
+                }
+            });
         }
     };
 
@@ -668,10 +841,11 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                 TimeRefreshactive.TimeRefreshInterval = window.setInterval(function () {
                     timeOut++;
                     TimeRefreshactive.setPercent(timeOut);
+                    TimeRefreshactive.percentTimerefresh();
                     if (timeOut == 100) {
                         window.setTimeout(function () {
                             TimeRefreshactive.TimeRefreshOut.on();
-                            TimeRefreshactive.percentTimerefresh();
+                            //TimeRefreshactive.percentTimerefresh();
                             timeOut = 0;
                         }, millisecond * 2);
                     }
@@ -679,23 +853,15 @@ layui.define(["jquery", 'form', "element"], function (exports) {
             }
         },
         setUpopen: function () {
-            var index = layer.open({
+            nixue.open({
                 title: '设置定时刷新',
                 type: 1,
-                shade: 0.2,
-                shadeClose: true,
                 area: ['22%', '20%'],
                 content: TimeRefreshactive.SetHtml(),
                 success: function () {
                     form.val("exampleTimeRefresh", { 'TimeRefresh': TimeRefreshactive.TimeRefreshOut.TimeRefresh, 'open': TimeRefreshactive.TimeRefreshOut.open });
-                    TimeRefreshactive.percentTimerefresh();
+                    //TimeRefreshactive.percentTimerefresh();
                 }
-            });
-            $(window).on("resize", function () {
-                layer.full(index);
-                //if (TimeRefreshactive.TimeRefreshOut.open) {
-                //    TimeRefreshactive.loading(TimeRefreshactive.TimeRefreshOut.TimeRefresh);
-                //}
             });
             form.on('switch(switchTimeRefresh)', function (data) {
                 layer.msg('自动刷新：' + (this.checked ? '启动' : '关闭'), {
@@ -713,12 +879,13 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                     window.clearInterval(TimeRefreshactive.TimeRefreshInterval);
                     TimeRefreshactive.TimeRefreshInterval = null;
                     TimeRefreshactive.setPercent(0);
+                    TimeRefreshactive.percentTimerefresh(true);
                 }
                 TimeRefreshactive.TimeRefreshOut.open = this.checked;
                 return false;
             });
         },
-        TimeRefreshOut: { TimeRefresh: 20, open: false, on: null },
+        TimeRefreshOut: { TimeRefresh: 20, open: false, on: null, tableid: '' },
         SetHtml: function () {
             return `<dav>
                 <div style="margin: 10px 10px 10px 10px">
@@ -742,12 +909,15 @@ layui.define(["jquery", 'form', "element"], function (exports) {
                 </div>
             </dav>` },
         TimeRefreshInterval: null,
-        percentTimerefresh: function () {
-            var temp = $("div.layui-table-tool-temp");
+        percentTimerefresh: function (type) {
+            var temp = $(`div[lay-id=${TimeRefreshactive.TimeRefreshOut.tableid}] div.layui-table-tool div.layui-table-tool-temp`);
             if (temp.length > 0) {
                 var percentTimerefresh = temp.children("div[lay-filter=percentTimerefresh]");
                 if (percentTimerefresh.length == 0) {
                     temp.append(`<div class="layui-progress" lay-showpercent="true" lay-filter="percentTimerefresh" style="margin: 3px;"><div class="layui-progress-bar" lay-percent="0%"></div></div>`);
+                }
+                else if (type) {
+                    percentTimerefresh.remove();
                 }
             }
         }
@@ -807,7 +977,7 @@ layui.define(["jquery", 'form', "element"], function (exports) {
     //获取ip地址结果集
     function GetIpMsg(Ip) {
         return new Promise(resolve => {
-            if (Ip === '0.0.0.0' || Ip === '127.0.0.1' || Ip.startsWith('192.168.') || Ip.trim() === '' || Ip === null) {
+            if (typeof Ip != "string" || Ip === '0.0.0.0' || Ip === '127.0.0.1' || Ip.startsWith('192.168.') || Ip.trim() === '' || Ip === null) {
                 resolve(null);
             } else {//window
                 if (window.top.queryips.length === 0) {
@@ -878,16 +1048,29 @@ layui.define(["jquery", 'form', "element"], function (exports) {
             thisreload();
         } else if (end === "close") {
             nixue.ThisClose();
-        } else if (end === "rerun") {
+        } else if (end.startsWith("rerun")) {
             window.top.onbeforeunload = null;
-            // 登录过期的时候，跳出ifram框架
-            if (top.location != self.location) {
-                top.location.reload(true);
+            if (end.startsWith("rerun:")) {
+                // 登录过期的时候，跳出ifram框架
+                if (top.location != self.location) {
+                    top.location.href = end.slice(6);
+                } else {
+                    location.href = end.slice(6);
+                }
             } else {
-                thisreload();
+                // 登录过期的时候，跳出ifram框架
+                if (top.location != self.location) {
+                    top.location.reload(true);
+                } else {
+                    thisreload();
+                }
             }
         } else if (end !== "") {
-            window.location.href = end;
+            if (end.startsWith("http")) {
+                window.location.href = end;
+            } else {
+                window.location.href = window.location.origin + '/' + end;
+            }
         }
     }
 

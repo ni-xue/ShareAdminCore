@@ -6,7 +6,7 @@
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.8/css/layui.css" media="all">
     <link rel="stylesheet" href="../../css/public.css" media="all">
 </head>
 <body>
@@ -78,8 +78,8 @@
 
                         <div class="layui-form-text">
                             <div class="layui-input-block">
-                                <button type="submit" class="layui-btn" lay-submit="" lay-filter="btnSubmit">立即提交</button>
-                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                <button type="button" class="layui-btn" lay-submit="" lay-filter="btnSubmit">立即提交</button>
+                                <button type="reset" class="layui-btn layui-btn-primary" lay-submit="" lay-filter="btnReset">重置</button>
                             </div>
                         </div>
                     </form>
@@ -87,7 +87,7 @@
             </fieldset>
         </div>
     </div>
-    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../lib/layui-v2.6.8/layui.js" charset="utf-8"></script>
     <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
     <script>
         layui.use(['form', 'nixue'], function () {
@@ -290,15 +290,21 @@
             }
 
             // 监听搜索操作
-            form.on('submit(btnSubmit)', function (data) {
-
+            nx.OnForm('submit(btnSubmit)', function (data) {
                 btnSubmit(data.field);
                 return false;
             });
 
+            // 监听搜索操作
+            nx.OnForm('submit(btnReset)', function (data) {
+
+                switchIsState();
+                return true;
+            });
+
             // 是否是菜单事件
-            form.on('switch(switchIsState)', function (data) {
-                var checked = this.checked ? this.checked : data[0].checked;
+            nx.OnForm('switch(switchIsState)', function (data) {
+                var checked = data.elem ? this.checked : data[0].checked;
                 if (checked) {
                     $("form.layui-form div.layui-form-item:gt(4)").hide();
                     $("input[name=txtController]").attr('lay-verify', "");
@@ -315,14 +321,14 @@
             });
 
             // 选项卡事件
-            form.on('select(ChangeDrop)', function (data) {
+            nx.OnForm('select(ChangeDrop)', function (data) {
                 ChangeDrop($(data.elem));
                 return false;
             });
 
             // 选项卡事件
-            form.on('checkbox(cblActionType)', function (data) {
-                var checked = this.checked ? this.checked : data[0].checked;
+            nx.OnForm('checkbox(cblActionType)', function (data) {
+                var checked = data.elem ? this.checked : data[0].checked;
                 var cblActionType = $("#cblActionType input:gt(0)");
                 cblActionType.prop("checked", "");
                 if (checked) {

@@ -8,6 +8,8 @@ namespace Admin.Facade.PermissionsMenu
 {
     public class Menu
     {
+        public const string name = "Admin";
+
         /// <summary>
         /// 菜单对象
         /// </summary>
@@ -59,26 +61,13 @@ namespace Admin.Facade.PermissionsMenu
             List<Rout> m_routs = new();
             if (isInitialize)
             {
-                m_routs.Add(new Rout("Admin", "Index", ActionEnum.View, ActionEnum.All));
+                m_routs.Add(new Rout(name, "Index", ActionEnum.View, ActionEnum.All));
             }
             else if (isRouts)
             {
-                try
-                {
-                    bool HomeState = dataSet.Tables[3].Rows[0]["HomeState"].ToVar<bool>();
-                    if (HomeState)
-                    {
-                        m_routs.Add(new Rout("Admin", "Index", ActionEnum.View, ActionEnum.All));
-                    }
-                    else
-                    {
-                        m_routs.Add(new Rout("Admin", "Index", ActionEnum.View, ActionEnum.NOT));
-                    }
-                }
-                catch (Exception)
-                {
-                    m_routs.Add(new Rout("Admin", "Index", ActionEnum.View, ActionEnum.All));
-                }
+                bool HomeState = dataSet.Tables[3].Rows[0]["HomeState"].ToTryVar<bool>(false);
+
+                m_routs.Add(new Rout(name, "Index", ActionEnum.View, HomeState ? ActionEnum.All : ActionEnum.NOT));
             }
             //获取菜单的对象
             List<MenuHead> Menus = new();
@@ -308,7 +297,8 @@ namespace Admin.Facade.PermissionsMenu
                         Id = item.Id,
                         Icon = item.ImgStyle,
                         Title = item.Title,
-                        Sort = item.Sort_Id
+                        Sort = item.Sort_Id,
+                        Hide = string.IsNullOrEmpty(item.PermissionType)
                     };
 
                     GetTreeNodeListByNoLockedDTOArray(treeNode, item.MenuLefts);
@@ -334,7 +324,8 @@ namespace Admin.Facade.PermissionsMenu
                                 Icon = item1.ImgStyle,
                                 Href = string.IsNullOrEmpty(item1.Controller) ? "" : $"{item1.Controller}/{item1.Action}{item1.Keywords}",
                                 Title = item1.Title,
-                                Sort = item1.Sort_Id
+                                Sort = item1.Sort_Id,
+                                Hide = string.IsNullOrEmpty(item1.PermissionType)
                             };
 
                             treeNode.Child.Add(treeNode1);

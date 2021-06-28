@@ -31,6 +31,7 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
          * @param options.loadingTime 初始化加载时间
          * @param options.pageAnim iframe窗口动画
          * @param options.maxTabNum 最大的tab打开数量
+         * @param options.maxTabNum 最大的tab打开数量
          */
         render: function (options) {
             options.iniUrl = options.iniUrl || null;
@@ -42,7 +43,8 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
             options.loadingTime = options.loadingTime || 1;
             options.pageAnim = options.pageAnim || false;
             options.maxTabNum = options.maxTabNum || 20;
-            $.getJSON(options.iniUrl, function (data) {
+            options.onAudit = options.onAudit || function () { };
+            nx.Psot(function (data) {
                 if (data.code != 0) {
                     miniAdmin.error(data.msg);
                 } else {
@@ -50,6 +52,7 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
                     miniAdmin.renderLogo(data.logoInfo);
                     miniAdmin.renderClear(options.clearUrl);
                     miniAdmin.renderHome(data.homeInfo);
+                    options.onAudit(data.userInfo);;
                     miniAdmin.renderAnim(options.pageAnim);
                     miniAdmin.listen();
                     miniMenu.render({
@@ -75,9 +78,23 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
                     });
                     miniAdmin.deleteLoader(options.loadingTime);
                 }
-            }).fail(function () {
-                miniAdmin.error('菜单接口有误');
+            }, options.iniUrl, null, function () {
+                    miniAdmin.error('菜单接口有误');
             });
+        },
+
+        IsAuthority: function () {
+            if (window.top.length > 0) {
+                var tabId = location.hash.replace(/^#\//, '');
+                if (location.pathname == "/" && tabId == "") {
+                    nx.alert("您无权访问该页面！", window.top.length == 3 ? "close" : "rerun" + ":" + location.origin);
+                    return false;
+                } else {
+                    miniTab.delete(tabId, true);
+                    return false;
+                }
+            }
+            return true;
         },
 
         /**
@@ -95,6 +112,7 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
          */
         renderHome: function (data) {
             sessionStorage.setItem('layuiminiHomeHref', data.href);
+            sessionStorage.setItem('AuthorityErrorUrl', "Admin/AuthorityError");
             $('#layuiminiHomeTabId').html('<span class="layuimini-tab-active"></span><span class="disable-close">' + data.title + '</span><i class="layui-icon layui-unselect layui-tab-close">ဆ</i>');
             $('#layuiminiHomeTabId').attr('lay-id', data.href);
             $('#layuiminiHomeTabIframe').html('<iframe width="100%" height="100%" frameborder="no" border="0" marginwidth="0" marginheight="0"  src="' + data.href + '"></iframe>');
@@ -240,7 +258,12 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
                 return true;
             }
         },
-
+        /**
+         * 刷新当前子页面
+         * */
+        refresh: function () {
+            $(".layui-tab-item.layui-show").find("iframe")[0].contentWindow.location.reload();
+        },
         /**
          * 监听
          */
@@ -279,7 +302,7 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
              * 刷新
              */
             $('body').on('click', '[data-refresh]', function () {
-                $(".layui-tab-item.layui-show").find("iframe")[0].contentWindow.location.reload();
+                miniAdmin.refresh();
                 miniAdmin.success('刷新成功');
             });
 
@@ -322,7 +345,6 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
                 }
             });
 
-
             /**
              * 全屏
              */
@@ -361,7 +383,7 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
                 if (!miniAdmin.MenusInfo.userInfo.isEdit) {
                     return miniAdmin.error('您无权修改！');
                 }
-                var index = layer.open({
+                nx.open({
                     title: '修改信息',
                     type: 2,
                     shade: 0.2,
@@ -369,9 +391,6 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
                     shadeClose: true,
                     area: ['30%', '38%'],
                     content: '/Admin/ManageEdit?id=' + miniAdmin.MenusInfo.userInfo.id,
-                });
-                $(window).on("resize", function () {
-                    layer.full(index);
                 });
             });
 

@@ -91,7 +91,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
         openNewTabByIframe: function (options) {
             options.href = options.href || null;
             options.title = options.title || null;
-            var loading = parent.layer.load(0, {shade: false, time: 2 * 1000});
+            var loading = parent.layer.load(0, { shade: false, time: 2 * 1000 });
             if (options.href === null || options.href === undefined) options.href = new Date().getTime();
             var checkTab = miniTab.check(options.href, true);
             if (!checkTab) {
@@ -153,6 +153,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
                 '<dd><a href="javascript:;" layuimini-tab-menu-close="current">关 闭 当 前</a></dd>\n' +
                 '<dd><a href="javascript:;" layuimini-tab-menu-close="other">关 闭 其 他</a></dd>\n' +
                 '<dd><a href="javascript:;" layuimini-tab-menu-close="all">关 闭 全 部</a></dd>\n' +
+                '<dd><a href="javascript:;" layuimini-tab-menu-close="divorced">&nbsp;&nbsp;脱&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;离&nbsp;&nbsp;</a></dd>\n' +
                 '</dl>\n' +
                 '</div>';
             var makeHtml = '<div class="layuimini-tab-make"></div>';
@@ -204,7 +205,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
              * 打开新窗口
              */
             $('body').on('click', '[layuimini-href]', function () {
-                var loading = layer.load(0, {shade: false, time: 2 * 1000});
+                var loading = layer.load(0, { shade: false, time: 2 * 1000 });
                 var tabId = $(this).attr('layuimini-href'),
                     href = $(this).attr('layuimini-href'),
                     title = $(this).text(),
@@ -242,7 +243,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
              * 在iframe子菜单上打开新窗口
              */
             $('body').on('click', '[layuimini-content-href]', function () {
-                var loading = parent.layer.load(0, {shade: false, time: 2 * 1000});
+                var loading = parent.layer.load(0, { shade: false, time: 2 * 1000 });
                 var tabId = $(this).attr('layuimini-content-href'),
                     href = $(this).attr('layuimini-content-href'),
                     title = $(this).attr('data-title'),
@@ -271,7 +272,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
              * 关闭选项卡
              **/
             $('body').on('click', '.layuimini-tab .layui-tab-title .layui-tab-close', function () {
-                var loading = layer.load(0, {shade: false, time: 2 * 1000});
+                var loading = layer.load(0, { shade: false, time: 2 * 1000 });
                 var $parent = $(this).parent();
                 var tabId = $parent.attr('lay-id');
                 if (tabId !== undefined || tabId !== null) {
@@ -284,7 +285,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
              * 选项卡操作
              */
             $('body').on('click', '[layuimini-tab-close]', function () {
-                var loading = layer.load(0, {shade: false, time: 2 * 1000});
+                var loading = layer.load(0, { shade: false, time: 2 * 1000 });
                 var closeType = $(this).attr('layuimini-tab-close');
                 $(".layuimini-tab .layui-tab-title li").each(function () {
                     var tabId = $(this).attr('lay-id');
@@ -335,7 +336,7 @@ layui.define(["element", "layer", "jquery"], function (exports) {
              * tab右键选项卡操作
              */
             $('body').on('click', '[layuimini-tab-menu-close]', function () {
-                var loading = layer.load(0, {shade: false, time: 2 * 1000});
+                var loading = layer.load(0, { shade: false, time: 2 * 1000 });
                 var closeType = $(this).attr('layuimini-tab-menu-close'),
                     currentTabId = $('.layuimini-tab-mousedown').attr('data-tab-id');
                 $(".layuimini-tab .layui-tab-title li").each(function () {
@@ -349,6 +350,8 @@ layui.define(["element", "layer", "jquery"], function (exports) {
                                 miniTab.delete(tabId);
                             } else if (closeType === 'other' && currentTabId !== tabId) {
                                 miniTab.delete(tabId);
+                            } else if (closeType === 'divorced' && currentTabId === tabId) {
+                                miniTab.divorced(tabId);
                             }
                         }
                     }
@@ -404,10 +407,10 @@ layui.define(["element", "layer", "jquery"], function (exports) {
             options.menuList = options.menuList || [];
             if (!options.urlHashLocation) return false;
             var tabId = location.hash.replace(/^#\//, '');
-            if (tabId === null || tabId === undefined || tabId ==='') return false;
+            if (tabId === null || tabId === undefined || tabId === '') return false;
 
             // 判断是否为首页
-            if(tabId ===options.homeInfo.href) return false;
+            if (tabId === options.homeInfo.href) return false;
 
             // 判断是否为右侧菜单
             var menu = miniTab.searchMenu(tabId, options.menuList);
@@ -574,8 +577,43 @@ layui.define(["element", "layer", "jquery"], function (exports) {
                     scrollLeft: left + 450
                 }, 200);
             }
-        }
+        },
 
+        divorced: function (tabId) {
+            let tabtitle = $("ul.layui-tab-title").children('li[lay-id="' + tabId + '"]');
+            let title = tabtitle.children("span").text();
+            let tab = $("div.layui-tab-item").children("iframe[src='" + tabId + "']");
+            let id = tabId.replace(/[^\u4e00-\u9fa5\w]/g, "");
+            //console.log(tabtitle, title, tab, id);
+            layer.open({
+                id: id,
+                title: title,
+                type: 1,
+                content: "",
+                shadeClose: false,
+                shade: 0,
+                maxmin: true,
+                area: ['50%', '80%'],
+                success: function (layero, index) {
+                    //layero tab
+                    tabtitle.hide();
+                    tabtitle.removeClass("layui-this");
+                    tab.parent("div.layui-tab-item").attr("layui-id", index);
+                    tab.appendTo($(layero).children("div#" + id));
+                    //$(layero).children("div#" + id)[0].addendChild(tab[0]);
+                },
+                cancel: function (index, layero) {
+                    let iframe = $(layero).children("div#" + id).children("iframe");
+                    iframe.appendTo($("div.layui-tab-item[layui-id=" + index + "]"));
+                    //$("div.layui-tab-item.layui-show")[0].addendChild(iframe[0]);
+                    tabtitle.addClass("layui-this");
+                    tabtitle.show();
+                },
+                end: function () {
+                    layer.msg("已关闭");
+                }
+            });
+        }
     };
 
     exports("miniTab", miniTab);

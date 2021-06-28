@@ -45,10 +45,11 @@ namespace Admin.Facade.PermissionsMenu
     /// </summary>
     public class UserInfo
     {
+        public string Token { get; set; }
         public int Id { get; set; }
         public string Name { get; set; }
-
         public bool IsEdit { get; set; }
+        public string TokenUrl { get; set; }
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ namespace Admin.Facade.PermissionsMenu
     public class HomeInfo
     {
         public string Title { get; set; } = "首页";
-        public string Href { get; set; } = "Admin/Welcome";
+        public string Href { get; set; } = Menu.name + "/Welcome";
 
     }
 
@@ -104,12 +105,17 @@ namespace Admin.Facade.PermissionsMenu
         /// <summary>
         /// 菜单图标样式
         /// </summary>
-        public string Icon { get; set; } = "";
+        public string Icon { get; set; } = "fa fa-window-maximize";
 
         /// <summary>
         /// 排序
         /// </summary>
         public int Sort { get; set; }
+
+        /// <summary>
+        /// 是否显示
+        /// </summary>
+        public bool Hide { get; set; }
 
         /// <summary>
         /// 子集

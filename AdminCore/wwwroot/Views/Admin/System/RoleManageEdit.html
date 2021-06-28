@@ -6,7 +6,7 @@
     <meta name="renderer" content="webkit">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <link rel="stylesheet" href="../../lib/layui-v2.5.5/css/layui.css" media="all">
+    <link rel="stylesheet" href="../../lib/layui-v2.6.8/css/layui.css" media="all">
     <link rel="stylesheet" href="../../css/public.css" media="all">
 </head>
 <body>
@@ -29,7 +29,7 @@
                                 <input type="text" name="txtRoleDescriptions" lay-verify="required" autocomplete="off" placeholder="*角色使用范围说明，100字符内" maxlength="100" class="layui-input">
                             </div>
                         </div>
-                        <div class="layui-form-item">
+                        <div style="display:none" class="layui-form-item">
                             <label class="layui-form-label">数据中心</label>
                             <div class="layui-input-block">
                                 <input type="checkbox" checked="" name="HomeState" lay-skin="switch" lay-filter="switchTest" lay-text="ON|OFF">
@@ -58,8 +58,8 @@
 
                         <div class="layui-form-item">
                             <div class="layui-input-block">
-                                <button type="submit" class="layui-btn" lay-submit="" lay-filter="btnSubmit">立即提交</button>
-                                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                <button type="button" class="layui-btn" lay-submit="" lay-filter="btnSubmit">立即提交</button>
+                                <button type="reset" class="layui-btn layui-btn-primary" lay-submit="" lay-filter="btnReset">重置</button>
                             </div>
                         </div>
                     </form>
@@ -72,10 +72,10 @@
 
         </div>
     </div>
-    <script src="../../lib/layui-v2.5.5/layui.js" charset="utf-8"></script>
+    <script src="../../lib/layui-v2.6.8/layui.js" charset="utf-8"></script>
     <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
     <script>
-        layui.use(['nixue'], function () {
+        layui.use(['form', 'nixue'], function () {
             if (!layui.AddRoute()) return;
             var $ = layui.jquery,
                 table = layui.table,
@@ -224,13 +224,10 @@
                 //    return;
                 //}
                 $("#MenuLefts tr").each(function () {
-                    var td1 = $(this).find("td").eq(0)
-                    var auto = td1.find("input")[0].dataset.authority;
-                    var input1 = td1.find("input")[0].defaultValue;
-                    var data = td1.find("input")[0].dataset.id;
+                    var td1 = $(this).find("td").eq(0).find("input")[0];
+                    var auto = td1.dataset.authority, input1 = td1.defaultValue, data = td1.dataset.id;
                     var td2 = $(this).find("td").eq(1).find("div input");
-                    var type = []
-                    var aType = ""
+                    var type = [], aType = "";
                     $(td2).each(function (i) {
                         if ($(td2[i]).prop("checked")) {
                             var attribute = td2[i].defaultValue;
@@ -254,7 +251,6 @@
                         }
                     }
 
-
                     let Role =
                     {
                         Id: parseInt(data),
@@ -263,7 +259,7 @@
                         ActionType: aType,//Add,Edit,Delete
                     }
                     Roles.push(Role);
-                })
+                });
                 console.log(Roles);
 
                 RoleDirectory.RoleName = field.txtRoleName; //$("#txtRoleName").val();
@@ -306,34 +302,74 @@
             }
 
             function IsArray(auto, type) {
-                var con = 0;
-                for (_auto of auto.split(',')) {
-                    if ($.inArray(_auto, type) != -1) {
-                        con++;
-                    }
-                }
-                if (con == type.length) {
+                var size0 = Maxlength(auto), size1 = Maxlength(type);
+                if (size0 == size1) {
                     return false;
                 } else {
                     return true;
                 }
+                //var con = 0, origtype = auto.split(',');
+                //for (_auto of origtype) {
+                //    if ($.inArray(_auto, type) != -1) con++;
+                //}
+
+                //if (con == origtype.length) {
+                //    return false;
+                //} else {
+                //    return true;
+                //}
             }
 
-            form.on('checkbox(checkAll)', function (data) {
+            function Maxlength(auto) {
+                var size = 0;
+                if (typeof auto == "string") auto = auto.split(',');
+                for (_auto of auto) {
+                    switch (_auto) {
+                        case 'Show':
+                            size += 2;
+                            break
+                        case 'View':
+                            size += 4;
+                            break;
+                        case 'Add':
+                            size += 8;
+                            break;
+                        case 'Edit':
+                            size += 16;
+                            break;
+                        case 'Delete':
+                            size += 32;
+                            break;
+                    }
+                }
+
+                return size;
+            }
+
+            nx.OnForm('checkbox(checkAll)', function (data) {
                 if ($(this).prop("checked") == true) {
                     $(this).parent().siblings("td").find("input[type='checkbox']").prop("checked", true);
                 } else {
                     $(this).parent().siblings("td").find("input[type='checkbox']").prop("checked", false);
                 }
-                layui.form.render("checkbox");
-            });
+                form.render("checkbox");
+
+                return false;
+            }, false);
 
             // 监听搜索操作
-            form.on('submit(btnSubmit)', function (data) {
+            nx.OnForm('submit(btnSubmit)', function (data) {
 
                 btnSubmit(data.field);
 
                 return false;
+            });
+
+            // 监听搜索操作
+            nx.OnForm('submit(btnReset)', function (data) {
+                $("#MenuLefts input[type='checkbox']").prop("checked", false);
+                form.render("checkbox");
+                return true;
             });
 
         });

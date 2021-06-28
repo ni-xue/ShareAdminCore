@@ -33,7 +33,7 @@ layui.config({
 });
 
 /**注册支持当前结果的路由规则 */
-layui.AddRoute = function () {
+layui.AddRoute = function (isindex = true) {
     if (parent.layui.BaseNx && parent.layui.BaseNx.IsAdmin) {
         layui.BaseNx = parent.layui.nixue;
         layui.BaseNx.IsAdmin = true;
@@ -45,10 +45,11 @@ layui.AddRoute = function () {
     } else if (parent.layui.nixue && parent.layui.nixue.IsAdmin) {
         layui.BaseNx = parent.layui.nixue;
         return true;
-    } else {
+    } else if (isindex) {
         layer.alert("非法访问！", { yes: close, end: close });
         function close() { location = location.origin; }
         return false;
     }
+    return true;
 }
 

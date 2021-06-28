@@ -1,10 +1,13 @@
 ﻿body {
     font: 12px Helvetica Neue,Helvetica,PingFang SC,Tahoma,Arial,sans-serif;
+    margin: 5px 15px 5px 5px;
 }
 
 .layui-table-cell {
-    height: 25px;
-    line-height: 25px;
+    height: 22px;
+    line-height: 22px;
+    padding: 0px 2.5px;
+    /* box-sizing: content-box;*/
 }
 
 .layui-table td, .layui-table th {
@@ -32,6 +35,13 @@
     padding: 0px 10px;
 }
 
+.layui-btn-xs {
+    height: 22px;
+    line-height: 22px;
+    padding: 0 8px;
+    font-size: 12px;
+}
+
 .layui-form-item .layui-input-inline {
     width: 150px;
 }
@@ -46,4 +56,26 @@
 
 .layui-input-block {
     min-height: 15px;
+}
+
+.keywordtip {
+    display: block;
+    float: left;
+    margin: 0;
+    padding: 0 5px;
+    /*height: 30px;*/
+    line-height: 28px;
+    font-size: 12px;
+    color: #444;
+}
+
+/*a默认样式*/
+a{ color:#686f7f; text-decoration:none; }
+a:link, a:visited{ color:#2A72C5; text-decoration:none; }
+/*a:active, a:hover{ color:#0065D9; text-decoration:underline; }*/
+/*a默认样式*/
+
+.layui-nav-tree .layui-nav-item > a .layui-nav-more {
+    padding: 0 0;
+    top: 50%;
 }
