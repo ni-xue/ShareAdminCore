@@ -383,14 +383,17 @@ layui.define(["element", "layer", "jquery"], function (exports) {
                 // 判断是否为新增窗口
                 if ($('.layuimini-menu-left').attr('layuimini-tab-tag') === 'add') {
                     $('.layuimini-menu-left').attr('layuimini-tab-tag', 'no')
-                } else {
-                    $("[layuimini-href]").parent().removeClass('layui-this');
-                    if (options.multiModule) {
-                        miniTab.listenSwitchMultiModule(tabId);
-                    } else {
-                        miniTab.listenSwitchSingleModule(tabId);
-                    }
                 }
+
+                $("div.layui-side ul li.layui-nav-itemed").removeClass("layui-nav-itemed");
+
+                $("[layuimini-href]").parent().removeClass('layui-this');
+                if (options.multiModule) {
+                    miniTab.listenSwitchMultiModule(tabId);
+                } else {
+                    miniTab.listenSwitchSingleModule(tabId);
+                }
+
                 miniTab.rollPosition();
             });
         },
