@@ -87,7 +87,7 @@ layui.define(["jquery", "miniMenu", "element", "miniTab", "miniTheme", "nixue"],
             if (window.top.length > 0) {
                 var tabId = location.hash.replace(/^#\//, '');
                 if (location.pathname == "/" && tabId == "") {
-                    nx.alert("您无权访问该页面！", window.top.length == 3 ? "close" : "rerun" + ":" + location.origin);
+                    nx.alert("您无权访问该页面！", nx.Window.name != '' ? "close" : "rerun" + ":" + location.origin);
                     return false;
                 } else {
                     miniTab.delete(tabId, true);
