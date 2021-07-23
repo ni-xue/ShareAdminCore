@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="../../lib/layui-v2.6.8/css/layui.css" media="all">
     <link rel="stylesheet" href="../../css/public.css" media="all">
+    <link rel="stylesheet" href="../../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
 </head>
 <body>
     <div class="layuimini-container">
@@ -30,6 +31,14 @@
                                 <input type="text" name="txtTitle" lay-verify="title" autocomplete="off" placeholder="*导航中文标题，10字符内" maxlength="10" class="layui-input">
                             </div>
                         </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">选择图标</label>
+                            <div class="layui-input-inline">
+                                <input type="text" id="iconPicker" lay-filter="iconPicker" style="display:none;">
+                            </div>
+                        </div>
+
                         <div class="layui-form-item">
                             <label class="layui-form-label">排序数字</label>
                             <div class="layui-input-inline">
@@ -90,13 +99,39 @@
     <script src="../../lib/layui-v2.6.8/layui.js" charset="utf-8"></script>
     <script src="../../js/lay-config.js?v=1.1.0" charset="utf-8"></script>
     <script>
-        layui.use(['form', 'nixue'], function () {
+        layui.use(['form', 'nixue', 'iconPickerFa'], function () {
             if (!layui.AddRoute()) return;
             var $ = layui.jquery,
                 form = layui.form,
                 table = layui.table,
                 nx = layui.nixue,
-                banx = layui.BaseNx;
+                banx = layui.BaseNx,
+                iconPicker = layui.iconPickerFa;
+
+            iconPicker.render({
+                // 选择器，推荐使用input
+                elem: '#iconPicker',
+                url: '../../api/iconPicker.json',
+                // 数据类型：fontClass/unicode，推荐使用fontClass
+                type: 'fontClass',
+                // 是否开启搜索：true/false，默认true
+                search: false,
+                // 是否开启分页：true/false，默认true
+                page: true,
+                // 每页显示数量，默认12
+                limit: 8,
+                // 每个图标格子的宽度：'43px'或'20%'
+                cellWidth: 'calc(25% - 10px)',
+                // 点击回调
+                click: function (data) {
+                    console.log(data);
+                    Permission.ImgStyle = "fa " + data.icon;
+                },
+                // 渲染成功后的回调
+                success: function (d) {
+                    //console.log(d);
+                }
+            });
 
             //自定义验证规则
             form.verify({
@@ -149,6 +184,8 @@
                                 , "HideStatus": result.data.Roles.HideStatus //开关状态
                             });
 
+                            iconPicker.checkIcon('iconPicker', result.data.Roles.ImgStyle.split(" ")[1]);
+
                             //form.render("checkbox");
 
                             Permission.Id = result.data.Roles.Id;
@@ -184,6 +221,7 @@
                                 switchIsState();//$(".tab-content dl:gt(4)").hide();
                             }
                         } else {
+                            iconPicker.checkIcon('iconPicker', Permission.ImgStyle.split(" ")[1]);
                             if (Permission.Id != -1) {
                                 Permission.ParentID = result.data.Roles.Id;
                                 Permission.Grades = result.data.Roles.Grades;
@@ -306,12 +344,12 @@
             nx.OnForm('switch(switchIsState)', function (data) {
                 var checked = data.elem ? this.checked : data[0].checked;
                 if (checked) {
-                    $("form.layui-form div.layui-form-item:gt(4)").hide();
+                    $("form.layui-form div.layui-form-item:gt(5)").hide();
                     $("input[name=txtController]").attr('lay-verify', "");
                     $("input[name=txtAction]").attr('lay-verify', "");
                     btnActionType(0, 'Show');
                 } else {
-                    $("form.layui-form div.layui-form-item:gt(4)").show();
+                    $("form.layui-form div.layui-form-item:gt(5)").show();
                     $("input[name=txtController]").attr('lay-verify', "content");
                     $("input[name=txtAction]").attr('lay-verify', "content");
                     btnActionType(1, 'View');

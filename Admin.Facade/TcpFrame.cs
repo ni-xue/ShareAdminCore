@@ -70,11 +70,11 @@ namespace Admin.Facade
 
         public static TcpResponse Send(ApiPacket api) => AideClientFrame.Send(api);
 
-        public static void SendAsync(ApiPacket api, Action<TcpResponse> action) => AideClientFrame.SendAsync(api, action);
+        public static async Task<TcpResponse> SendAsync(ApiPacket api) => await AideClientFrame.SendAsync(api);
 
         public static TcpResponse SendIpIdea(string IpPort, ApiPacket api) => AideClientFrame.SendIpIdea(IpPort, api);
 
-        public static void SendIpIdeaAsync(string IpPort, ApiPacket api, Action<TcpResponse> action) => AideClientFrame.SendIpIdeaAsync(IpPort, api, action);
+        public static async Task<TcpResponse> SendIpIdeaAsync(string IpPort, ApiPacket api) => await AideClientFrame.SendIpIdeaAsync(IpPort, api);
 
         public static void Reconnection() => AideClientFrame.Reconnection();
 

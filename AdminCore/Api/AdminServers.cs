@@ -93,7 +93,7 @@ namespace AdminCore.Api
         {
             DataTable dt = FacadeManage.AideAdminFacade.GetBaseUserToLoginMsg(ID);
             DateTime date = DateTime.Now;
-            string ip = Context.GetIP();
+            string ip = Context.GetUserIp();
             if (!dt.IsEmpty())
             {
                 FacadeManage.AideAdminFacade.UpdateBaseUserToLoginMsg(ID, dt.Rows[0]["BaseTime"].ToVar<DateTime>(), dt.Rows[0]["BaseIp"].ToString(), date, ip);
@@ -1091,13 +1091,12 @@ namespace AdminCore.Api
 
         private static readonly Tool.Utils.ThreadQueue.TaskOueue<BaseLog, bool> taskOueue = new(WriteBaselog);
 
-        public static void StartBaseLog()
+        static void ContinueBaseLog()
         {
-            //if (!taskOueue.IsContinueWith)
-            //{
-            //    taskOueue.ContinueWith += TaskOueue_ContinueWith;
-            //}
-            taskOueue.ContinueWith += TaskOueue_ContinueWith;
+            if (!taskOueue.IsContinueWith)
+            {
+                taskOueue.ContinueWith += TaskOueue_ContinueWith;
+            }
         }
 
         static bool WriteBaselog(BaseLog log)
@@ -1116,13 +1115,14 @@ namespace AdminCore.Api
 
         private void AddBaseLog(string ModuleType, string ModuleText)
         {
+            ContinueBaseLog();
             taskOueue.Add(new BaseLog
             {
                 BaseID = anmininfo.ID,
                 BaseName = anmininfo.BaseName,
                 ModuleType = ModuleType,
                 ModuleText = ModuleText,
-                BaseIp = Context.GetIP()
+                BaseIp = Context.GetUserIp()
             });
         }
 

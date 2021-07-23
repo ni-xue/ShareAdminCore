@@ -8,6 +8,7 @@
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="https://json.schemastore.org/appsettings.json" /></VisualStudio></ProjectExtensions>
 
   <ItemGroup>
+    <None Include="wwwroot\js\lay-module\iconPicker\iconPickerFa.js" />
     <None Include="wwwroot\js\lay-module\layuimini\miniAdmin.js" />
     <None Include="wwwroot\js\lay-module\layuimini\miniMenu.js" />
     <None Include="wwwroot\js\lay-module\layuimini\miniTab.js" />

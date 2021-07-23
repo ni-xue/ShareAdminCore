@@ -45,7 +45,7 @@ namespace Admin.Facade.Session
 
             IsSuccess(response);
 
-            var _keys = response.Obj == null ? Array.Empty<string>() : response.Obj.Split('|').AsEnumerable();
+            var _keys = response.Text == null ? Array.Empty<string>() : response.Text.Split('|').AsEnumerable();
             return _keys;
         }
 

@@ -34,7 +34,11 @@ namespace Admin.Facade
         {
             var session = ashxRoute.HttpContext.Session;
 
-            var url = string.Concat(ashxRoute.HttpContext.Request.Scheme, "://", ashxRoute.HttpContext.Request.Host);
+            //var url = string.Concat(ashxRoute.HttpContext.Request.Scheme, "://", ashxRoute.HttpContext.Request.Host);
+
+            var (scheme, host) = ashxRoute.HttpContext.GetSchemeHost();
+
+            var url = string.Concat(scheme, "://", host);
 
             if (ashxRoute.HttpContext.Request.Path.Value.StartsWith("/Admin/Index", System.StringComparison.OrdinalIgnoreCase))
             {
